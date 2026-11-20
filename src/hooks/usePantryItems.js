@@ -67,5 +67,43 @@ export function usePantryItems() {
     setItems((prev) => prev.filter((item) => item.id !== id))
   }
 
-  return { items, history, addItem, updateItem, removeItem }
+  // 名前の候補に、まだない食材だけを足す（既にある前回の値は上書きしない）
+  function mergeIntoHistory(baseHistory, list) {
+    const merged = { ...baseHistory }
+    for (const { name, unit, location } of list) {
+      if (!merged[name]) merged[name] = { unit, location }
+    }
+    return merged
+  }
+
+  // CSV取り込み用：今の在庫の後ろにまとめて追加する
+  function addItems(list) {
+    const today = todayString()
+    const newItems = list.map((data) => ({ id: createId(), ...data, addedAt: today }))
+    setItems((prev) => [...prev, ...newItems])
+    setHistory((prev) => {
+      const next = { ...prev }
+      for (const { name, unit, location } of newItems) next[name] = { unit, location }
+      return next
+    })
+  }
+
+  // サンプル読込・復元用：在庫を丸ごと置き換える。nextHistory があれば名前の候補も置き換える
+  function replaceItems(list, nextHistory = null) {
+    const today = todayString()
+    const nextItems = list.map(({ id, addedAt, ...data }) => ({
+      id: id || createId(),
+      ...data,
+      addedAt: addedAt || today,
+    }))
+    setItems(nextItems)
+    setHistory((prev) => mergeIntoHistory(nextHistory ?? prev, nextItems))
+  }
+
+  function clearAll() {
+    setItems([])
+    setHistory({})
+  }
+
+  return { items, history, addItem, updateItem, removeItem, addItems, replaceItems, clearAll }
 }

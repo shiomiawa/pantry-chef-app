@@ -384,3 +384,105 @@ input {
   margin: 0 0 12px;
   font-size: 1.1rem;
 }
+
+/* ---- 設定画面 ---- */
+.panel__title {
+  margin: 0 0 8px;
+  font-size: 1rem;
+}
+
+.panel .form-error,
+.panel .form-message {
+  margin-top: 8px;
+}
+
+.help-text {
+  margin: 0 0 12px;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.file-button {
+  display: inline-flex;
+  align-items: center;
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.file-button:has(+ .visually-hidden:focus-visible) {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.import-preview {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--color-border);
+}
+
+.import-preview__title {
+  margin: 12px 0 6px;
+  font-size: 0.95rem;
+}
+
+.import-preview__summary {
+  margin: 12px 0 6px;
+}
+
+.table-wrap {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.table th,
+.table td {
+  padding: 6px 8px;
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  white-space: nowrap;
+}
+
+.table th {
+  color: var(--color-text-muted);
+  font-weight: normal;
+}
+
+.table select {
+  min-height: 36px;
+  padding: 4px 6px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  font: inherit;
+  color: inherit;
+}
+
+.notice-list {
+  margin: 0 0 12px;
+  padding-left: 20px;
+  font-size: 0.85rem;
+  color: var(--color-warning);
+}

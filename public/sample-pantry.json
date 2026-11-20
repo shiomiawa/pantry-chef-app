@@ -1,0 +1,25 @@
+{
+  "description": "パントリーシェフのお試し用サンプル（架空の食材）。expiryInDays は読み込んだ日から何日後が期限か。マイナスは期限切れ、null は期限なし",
+  "items": [
+    { "name": "牛乳", "quantity": 1, "unit": "本", "expiryInDays": -2, "location": "冷蔵" },
+    { "name": "もやし", "quantity": 1, "unit": "袋", "expiryInDays": -1, "location": "冷蔵" },
+    { "name": "食パン", "quantity": 3, "unit": "枚", "expiryInDays": -1, "location": "常温" },
+    { "name": "鶏もも肉", "quantity": 300, "unit": "g", "expiryInDays": 0, "location": "冷蔵" },
+    { "name": "豆腐", "quantity": 1, "unit": "丁", "expiryInDays": 1, "location": "冷蔵" },
+    { "name": "ほうれん草", "quantity": 1, "unit": "束", "expiryInDays": 2, "location": "冷蔵" },
+    { "name": "卵", "quantity": 6, "unit": "個", "expiryInDays": 3, "location": "冷蔵" },
+    { "name": "キャベツ", "quantity": 0.5, "unit": "玉", "expiryInDays": 5, "location": "冷蔵" },
+    { "name": "にんじん", "quantity": 2, "unit": "本", "expiryInDays": 6, "location": "冷蔵" },
+    { "name": "納豆", "quantity": 3, "unit": "パック", "expiryInDays": 6, "location": "冷蔵" },
+    { "name": "ヨーグルト", "quantity": 1, "unit": "個", "expiryInDays": 7, "location": "冷蔵" },
+    { "name": "豚こま切れ肉", "quantity": 250, "unit": "g", "expiryInDays": 25, "location": "冷凍" },
+    { "name": "鮭の切り身", "quantity": 2, "unit": "切れ", "expiryInDays": 30, "location": "冷凍" },
+    { "name": "冷凍うどん", "quantity": 3, "unit": "玉", "expiryInDays": 90, "location": "冷凍" },
+    { "name": "ツナ缶", "quantity": 2, "unit": "缶", "expiryInDays": 365, "location": "常温" },
+    { "name": "パスタ", "quantity": 500, "unit": "g", "expiryInDays": 300, "location": "常温" },
+    { "name": "カットトマト缶", "quantity": 1, "unit": "缶", "expiryInDays": 400, "location": "常温" },
+    { "name": "玉ねぎ", "quantity": 3, "unit": "個", "expiryInDays": null, "location": "常温" },
+    { "name": "じゃがいも", "quantity": 4, "unit": "個", "expiryInDays": null, "location": "常温" },
+    { "name": "米", "quantity": 2, "unit": "kg", "expiryInDays": null, "location": "常温" }
+  ]
+}

@@ -1,8 +1,15 @@
+import BackupPanel from '../components/BackupPanel.jsx'
+import CsvImportPanel from '../components/CsvImportPanel.jsx'
+import { usePantryItems } from '../hooks/usePantryItems.js'
+
 export default function SettingsScreen() {
+  const { items, history, addItems, replaceItems, clearAll } = usePantryItems()
+
   return (
     <section className="screen">
       <h2 className="screen__title">設定</h2>
-      <p className="placeholder">準備中です</p>
+      <CsvImportPanel onImport={addItems} />
+      <BackupPanel items={items} history={history} onReplace={replaceItems} onClearAll={clearAll} />
     </section>
   )
 }
