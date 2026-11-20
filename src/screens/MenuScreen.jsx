@@ -1,8 +1,9 @@
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import MenuCard from '../components/MenuCard.jsx'
 import WantedFoodsInput from '../components/WantedFoodsInput.jsx'
 import { usePantryItems } from '../hooks/usePantryItems.js'
 import { useShoppingList } from '../hooks/useShoppingList.js'
+import { DATA_REPLACED_EVENT } from '../sync/syncClient.js'
 import { CUISINES, DEFAULT_CUISINE, getCuisineInfo, loadCuisine, saveCuisine } from '../utils/cuisine.js'
 import { todayString } from '../utils/date.js'
 import {
@@ -37,6 +38,15 @@ export default function MenuScreen() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [suggestion, setSuggestion] = useState(loadLastSuggestion)
+
+  // ほかの端末の提案が同期で届いたら表示し直す（スーパーで手順を確認できるように）
+  useEffect(() => {
+    function reload() {
+      setSuggestion(loadLastSuggestion())
+    }
+    window.addEventListener(DATA_REPLACED_EVENT, reload)
+    return () => window.removeEventListener(DATA_REPLACED_EVENT, reload)
+  }, [])
   const { addItems: addShoppingItems } = useShoppingList()
   // どの案のカードに「買い物リストへ追加しました」を出すか
   const [shoppingNotice, setShoppingNotice] = useState({ index: -1, text: '' })

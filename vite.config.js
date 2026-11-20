@@ -1,9 +1,22 @@
 import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 
-const MAX_DEV_BODY_BYTES = 64 * 1024
+// 同期のデータ（サーバー側の上限は20万文字。日本語はUTF-8で1文字3バイトになりうる）も受け取れる大きさにする
+const MAX_DEV_BODY_BYTES = 1024 * 1024
 // サーバー側だけで使う環境変数（画面側のコードには渡さない）
-const SERVER_ENV_KEYS = ['ANTHROPIC_API_KEY', 'ANTHROPIC_MODEL', 'DEMO_CODE']
+const SERVER_ENV_KEYS = [
+  'ANTHROPIC_API_KEY',
+  'ANTHROPIC_MODEL',
+  'DEMO_CODE',
+  'UPSTASH_REDIS_REST_URL',
+  'UPSTASH_REDIS_REST_TOKEN',
+  'SYNC_CODE',
+]
+// 開発サーバーで動かす Vercel関数（URL → ファイル）
+const API_ROUTES = {
+  '/api/suggest': '/api/suggest.js',
+  '/api/sync': '/api/sync.js',
+}
 
 function readBody(req) {
   return new Promise((resolve, reject) => {
@@ -33,27 +46,29 @@ function devApiPlugin(env) {
         if (env[key] && !process.env[key]) process.env[key] = env[key]
       }
 
-      server.middlewares.use('/api/suggest', async (req, res) => {
-        // Vercel の req.body / res.status().json() に合わせた最小限の形
-        const vercelRes = {
-          setHeader: (name, value) => res.setHeader(name, value),
-          status(code) {
-            res.statusCode = code
-            return vercelRes
-          },
-          json(data) {
-            res.setHeader('Content-Type', 'application/json; charset=utf-8')
-            res.end(JSON.stringify(data))
-          },
-        }
-        try {
-          const raw = req.method === 'POST' ? await readBody(req) : ''
-          const { default: handler } = await server.ssrLoadModule('/api/suggest.js')
-          await handler({ method: req.method, body: raw }, vercelRes)
-        } catch {
-          vercelRes.status(400).json({ error: '送られたデータを読み取れませんでした' })
-        }
-      })
+      for (const [route, file] of Object.entries(API_ROUTES)) {
+        server.middlewares.use(route, async (req, res) => {
+          // Vercel の req.headers / req.body / res.status().json() に合わせた最小限の形
+          const vercelRes = {
+            setHeader: (name, value) => res.setHeader(name, value),
+            status(code) {
+              res.statusCode = code
+              return vercelRes
+            },
+            json(data) {
+              res.setHeader('Content-Type', 'application/json; charset=utf-8')
+              res.end(JSON.stringify(data))
+            },
+          }
+          try {
+            const raw = req.method === 'POST' || req.method === 'PUT' ? await readBody(req) : ''
+            const { default: handler } = await server.ssrLoadModule(file)
+            await handler({ method: req.method, headers: req.headers, body: raw }, vercelRes)
+          } catch {
+            vercelRes.status(400).json({ error: '送られたデータを読み取れませんでした' })
+          }
+        })
+      }
     },
   }
 }

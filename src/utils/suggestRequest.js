@@ -1,3 +1,4 @@
+import { saveSyncedJson } from '../sync/syncClient.js'
 import { compareByExpiry } from './expiryStatus.js'
 
 // サーバー（server/suggestMenus.js）の上限と合わせる
@@ -65,10 +66,7 @@ export function loadLastSuggestion() {
   }
 }
 
+// 保存できなくても画面には表示する。同期を使っている端末では、スマホでも手順を見られるようサーバーへ送る
 export function saveLastSuggestion(suggestion) {
-  try {
-    localStorage.setItem(LAST_SUGGESTION_KEY, JSON.stringify(suggestion))
-  } catch {
-    // 保存できなくても画面には表示する
-  }
+  saveSyncedJson(LAST_SUGGESTION_KEY, suggestion)
 }

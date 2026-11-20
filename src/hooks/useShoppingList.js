@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { DATA_REPLACED_EVENT, saveSyncedJson } from '../sync/syncClient.js'
 import { todayString } from '../utils/date.js'
 import { namesMatch } from '../utils/names.js'
 
@@ -10,14 +11,6 @@ function loadItems() {
     return Array.isArray(value) ? value : []
   } catch {
     return []
-  }
-}
-
-function saveItems(items) {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
-  } catch {
-    // 保存できない環境でも画面は動かし続ける
   }
 }
 
@@ -33,9 +26,19 @@ function createId() {
 export function useShoppingList() {
   const [items, setItems] = useState(loadItems)
 
+  // 保存（保存できない環境でも画面は動かし続ける）。同期を使っている端末では、変更をサーバーへ送る
   useEffect(() => {
-    saveItems(items)
+    saveSyncedJson(STORAGE_KEY, items)
   }, [items])
+
+  // ほかの端末のデータが同期で届いたら読み直す
+  useEffect(() => {
+    function reload() {
+      setItems(loadItems())
+    }
+    window.addEventListener(DATA_REPLACED_EVENT, reload)
+    return () => window.removeEventListener(DATA_REPLACED_EVENT, reload)
+  }, [])
 
   // 同じ名前（「鶏もも肉」と「鶏もも肉（国産）」も同じとみなす）は重ねて追加しない
   function addItems(entries, from = '') {

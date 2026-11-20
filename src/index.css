@@ -69,9 +69,47 @@ input {
   border-bottom: 1px solid var(--color-border);
 }
 
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
 .app-header h1 {
   margin: 0;
   font-size: 1.1rem;
+}
+
+/* ---- 同期 ---- */
+.sync-badge {
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  background: var(--color-bg);
+  color: var(--color-text-muted);
+}
+
+.sync-badge--synced {
+  color: var(--color-primary);
+}
+
+.sync-badge--pending,
+.sync-badge--offline {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+
+.sync-badge--error {
+  background: var(--color-expired-bg);
+  color: var(--color-expired);
+  font-weight: bold;
+}
+
+.sync-status {
+  margin: 0 0 12px;
+  font-size: 0.9rem;
 }
 
 .app-main {

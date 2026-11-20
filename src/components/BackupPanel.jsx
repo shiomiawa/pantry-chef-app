@@ -1,4 +1,5 @@
 import { useId, useState } from 'react'
+import { isSyncEnabled } from '../sync/syncClient.js'
 import { buildSampleItems, createBackup, parseBackup } from '../utils/backup.js'
 import { todayString } from '../utils/date.js'
 import { downloadTextFile } from '../utils/download.js'
@@ -24,10 +25,13 @@ export default function BackupPanel({ items, history, onReplace, onClearAll }) {
     )
   }
 
+  // 同期中の端末では、置き換え・削除が同期先（ほかの端末）にも反映されることを伝える
+  const syncNote = () => (isSyncEnabled() ? '\n※同期中のため、同期先とほかの端末のデータも同じように変わります。' : '')
+
   function confirmReplace(action) {
     if (items.length === 0) return true
     return window.confirm(
-      `今の在庫（${items.length}品）を${action}に置き換えます。よろしいですか？\n自分のデータは、先に「書き出す」で保存しておくと安心です。`,
+      `今の在庫（${items.length}品）を${action}に置き換えます。よろしいですか？\n自分のデータは、先に「書き出す」で保存しておくと安心です。${syncNote()}`,
     )
   }
 
@@ -69,7 +73,7 @@ export default function BackupPanel({ items, history, onReplace, onClearAll }) {
   }
 
   function handleClearAll() {
-    if (!window.confirm('在庫と名前の候補を、すべて削除します。元に戻せません。よろしいですか？')) return
+    if (!window.confirm(`在庫と名前の候補を、すべて削除します。元に戻せません。よろしいですか？${syncNote()}`)) return
     onClearAll()
     showResult('clear', 'すべてのデータを削除しました')
   }

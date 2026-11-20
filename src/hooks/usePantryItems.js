@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { DATA_REPLACED_EVENT, saveSyncedJson } from '../sync/syncClient.js'
 import { todayString } from '../utils/date.js'
 
 const STORAGE_KEY = 'pantry-items'
@@ -13,14 +14,6 @@ function loadJson(key, fallback, isValid) {
     return isValid(value) ? value : fallback
   } catch {
     return fallback
-  }
-}
-
-function saveJson(key, value) {
-  try {
-    localStorage.setItem(key, JSON.stringify(value))
-  } catch {
-    // 保存できない環境（プライベートモードなど）でも画面は動かし続ける
   }
 }
 
@@ -45,13 +38,24 @@ export function usePantryItems() {
   const [items, setItems] = useState(() => loadJson(STORAGE_KEY, [], Array.isArray))
   const [history, setHistory] = useState(() => loadJson(HISTORY_KEY, {}, isPlainObject))
 
+  // 保存（保存できない環境でも画面は動かし続ける）。同期を使っている端末では、変更をサーバーへ送る
   useEffect(() => {
-    saveJson(STORAGE_KEY, items)
+    saveSyncedJson(STORAGE_KEY, items)
   }, [items])
 
   useEffect(() => {
-    saveJson(HISTORY_KEY, history)
+    saveSyncedJson(HISTORY_KEY, history)
   }, [history])
+
+  // ほかの端末のデータが同期で届いたら読み直す
+  useEffect(() => {
+    function reload() {
+      setItems(loadJson(STORAGE_KEY, [], Array.isArray))
+      setHistory(loadJson(HISTORY_KEY, {}, isPlainObject))
+    }
+    window.addEventListener(DATA_REPLACED_EVENT, reload)
+    return () => window.removeEventListener(DATA_REPLACED_EVENT, reload)
+  }, [])
 
   function rememberItem({ name, unit, location, category }) {
     setHistory((prev) => ({ ...prev, [name]: toHistoryEntry({ unit, location, category }) }))

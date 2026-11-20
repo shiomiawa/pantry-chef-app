@@ -27,13 +27,13 @@ pantry-chef（画面表示名：**パントリーシェフ**）。
 
 ## 技術スタック
 
-STEP 7（買い物リスト）まで作成済み。同期・費用対策・公開などは、設計書の STEP に沿って追加する予定。
+STEP 8（自分専用の同期）まで作成済み。費用対策・公開・README は、設計書の STEP に沿って追加する予定。
 
 | 領域 | 採用技術 |
 | --- | --- |
 | 画面 | React（JavaScript）＋ Vite。`npm run dev` で開発サーバー、`npm run build` でビルド |
 | データ保存 | ブラウザのローカルストレージ（`pantry-items`、名前の候補と前回の単位・保管場所は `pantry-history`、在庫一覧の並び替えの選択は `pantry-sort`、献立の料理の種類は `pantry-cuisine`、最後のAI提案は `pantry-last-suggestion`、買い物リストは `pantry-shopping`、同期コードは `pantry-sync-code`）。デモコードは sessionStorage（同期コードとは別） |
-| 自分専用の同期 | Upstash Redis（`api/sync.js` 経由。PCとスマホでデータをそろえる）。キー `pantry:data` に在庫と買い物リストをまとめた1件のJSONで保存する。2台の編集がぶつかったら `updatedAt` が新しいほうを採用 |
+| 自分専用の同期 | Upstash Redis（`@upstash/redis`。`api/sync.js` → `server/syncStore.js`。画面側は `src/sync/syncClient.js`）。キー `pantry:data` に在庫・買い物リスト・名前の候補・最後のAI提案をまとめた1件のJSONで保存する。2台の編集がぶつかったら `updatedAt` が新しいほうを採用。同期するデータの保存は `saveSyncedJson` を通す |
 | サーバー処理 | Vercel関数（`api/` フォルダ。例：`api/suggest.js`、`api/sync.js`） |
 | AI | Claude API（モデルは環境変数 `ANTHROPIC_MODEL` で指定） |
 | 公開 | Vercel（GitHub連携）。GitHub Pagesは使わない |
