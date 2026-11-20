@@ -17,7 +17,7 @@ function IngredientList({ items, wants }) {
   )
 }
 
-export default function MenuCard({ menu, index, wants }) {
+export default function MenuCard({ menu, index, wants, onAddToShopping, shoppingNotice }) {
   return (
     <article className="menu-card">
       <h3 className="menu-card__title">
@@ -31,7 +31,19 @@ export default function MenuCard({ menu, index, wants }) {
 
       <h4 className="menu-card__heading">足りない食材</h4>
       {menu.missing.length > 0 ? (
-        <IngredientList items={menu.missing} wants={wants} />
+        <>
+          <IngredientList items={menu.missing} wants={wants} />
+          {onAddToShopping && (
+            <button type="button" className="button menu-card__shopping" onClick={() => onAddToShopping(menu)}>
+              🛒 足りない食材を買い物リストへ（{menu.missing.length}品）
+            </button>
+          )}
+          {shoppingNotice && (
+            <p className="form-message" role="status">
+              {shoppingNotice}
+            </p>
+          )}
+        </>
       ) : (
         <p className="menu-card__ok">なし（今ある食材で作れます）</p>
       )}

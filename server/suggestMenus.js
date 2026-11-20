@@ -213,8 +213,12 @@ export const MENU_SCHEMA = {
 
 // ---- 応答の確認 ----
 
+// カタカナはひらがなにそろえる（「サバ」と「さば」を同じとみなす）。画面側の src/utils/names.js と同じ
 function normalizeName(value) {
-  return value.replace(/[\s　（）()「」・]/g, '').toLowerCase()
+  return value
+    .replace(/[\s　（）()「」・]/g, '')
+    .replace(/[ァ-ヶ]/g, (char) => String.fromCharCode(char.charCodeAt(0) - 0x60))
+    .toLowerCase()
 }
 
 // 「鶏もも肉」と「鶏もも肉（国産）」のように、片方がもう片方を含めば同じ食材とみなす

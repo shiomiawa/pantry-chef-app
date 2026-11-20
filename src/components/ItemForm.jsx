@@ -34,6 +34,8 @@ export default function ItemForm({ mode, initialItem, history, nameSuggestions, 
   const nameInputRef = useRef(null)
   const idPrefix = useId()
   const isAddMode = mode === 'add'
+  // restock：買い物リストの購入済みを在庫に入れる。新しい食材として扱うが、保存したら親が閉じる
+  const isNewItem = mode === 'add' || mode === 'restock'
 
   function updateField(field, value) {
     setValues((prev) => ({ ...prev, [field]: value }))
@@ -41,10 +43,10 @@ export default function ItemForm({ mode, initialItem, history, nameSuggestions, 
 
   function handleNameChange(event) {
     const name = event.target.value
-    const previous = isAddMode ? history[name.trim()] : null
+    const previous = isNewItem ? history[name.trim()] : null
     setValues((prev) => {
       const next = previous ? { ...prev, name, unit: previous.unit, location: previous.location } : { ...prev, name }
-      if (isAddMode && !isCategoryManual) {
+      if (isNewItem && !isCategoryManual) {
         next.category = isCategoryKey(previous?.category) ? previous.category : guessCategory(name)
       }
       return next
@@ -220,14 +222,14 @@ export default function ItemForm({ mode, initialItem, history, nameSuggestions, 
 
       <div className="form-actions">
         <button type="submit" className="button button--primary">
-          {isAddMode ? '追加する' : '保存する'}
+          {isAddMode ? '追加する' : mode === 'restock' ? '在庫に追加' : '保存する'}
         </button>
         <button type="button" className="button" onClick={onCancel}>
           {isAddMode ? '閉じる' : 'キャンセル'}
         </button>
       </div>
 
-      {!isAddMode && onDelete && (
+      {mode === 'edit' && onDelete && (
         <button type="button" className="button button--danger form-delete" onClick={onDelete}>
           この食材を削除
         </button>

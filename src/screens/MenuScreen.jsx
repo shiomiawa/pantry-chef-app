@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import MenuCard from '../components/MenuCard.jsx'
 import WantedFoodsInput from '../components/WantedFoodsInput.jsx'
 import { usePantryItems } from '../hooks/usePantryItems.js'
+import { useShoppingList } from '../hooks/useShoppingList.js'
 import { CUISINES, DEFAULT_CUISINE, getCuisineInfo, loadCuisine, saveCuisine } from '../utils/cuisine.js'
 import { todayString } from '../utils/date.js'
 import {
@@ -36,6 +37,18 @@ export default function MenuScreen() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [suggestion, setSuggestion] = useState(loadLastSuggestion)
+  const { addItems: addShoppingItems } = useShoppingList()
+  // どの案のカードに「買い物リストへ追加しました」を出すか
+  const [shoppingNotice, setShoppingNotice] = useState({ index: -1, text: '' })
+
+  function handleAddToShopping(menu, index) {
+    const { added, skipped } = addShoppingItems(menu.missing, menu.title)
+    let text = 'すべて買い物リストに入っています'
+    if (added > 0) {
+      text = `${added}品を買い物リストに追加しました${skipped > 0 ? `（${skipped}品はすでにリストにあります）` : ''}`
+    }
+    setShoppingNotice({ index, text })
+  }
 
   const stockNames = useMemo(
     () => [...new Set(items.filter((item) => item.quantity > 0).map((item) => item.name))].sort((a, b) => a.localeCompare(b, 'ja')),
@@ -163,7 +176,14 @@ export default function MenuScreen() {
             {suggestion.wants.length > 0 && `（食べたい：${suggestion.wants.join('、')}）`}
           </p>
           {suggestion.menus.map((menu, index) => (
-            <MenuCard key={`${menu.title}-${index}`} menu={menu} index={index} wants={suggestion.wants} />
+            <MenuCard
+              key={`${menu.title}-${index}`}
+              menu={menu}
+              index={index}
+              wants={suggestion.wants}
+              onAddToShopping={(target) => handleAddToShopping(target, index)}
+              shoppingNotice={shoppingNotice.index === index ? shoppingNotice.text : ''}
+            />
           ))}
         </div>
       )}
