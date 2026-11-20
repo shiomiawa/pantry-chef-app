@@ -15,6 +15,17 @@ export const LIMITS = {
 }
 
 const LOCATIONS = ['冷蔵', '冷凍', '常温']
+
+// 料理の種類。key は画面側（src/utils/cuisine.js）と合わせる。omakase は種類を指定しない
+const CUISINE_PROMPTS = {
+  otsumami: 'おつまみ（お酒に合う、少量で手早く作れる料理）',
+  washoku: '和食',
+  yoshoku: '洋食',
+  chuka: '中華料理',
+  korean: '韓国料理',
+  asian: 'アジア料理（タイ・ベトナム・インドネシアなど）',
+  omakase: null,
+}
 // 実際の出力は2,000トークン前後。上限は打ち切りを防ぐための天井で、使った分だけ課金される
 const MAX_TOKENS = 8000
 const MAX_ATTEMPTS = 2 // 形式不正などのときは1回だけやり直す
@@ -83,7 +94,9 @@ export function validateRequest(body) {
       ? Math.min(body.maxMissing, LIMITS.maxMissingLimit)
       : null
 
-  return { today: body.today, items, wants, servings, maxMissing }
+  const cuisine = Object.hasOwn(CUISINE_PROMPTS, body.cuisine) ? body.cuisine : 'omakase'
+
+  return { today: body.today, items, wants, servings, maxMissing, cuisine }
 }
 
 // ---- プロンプト ----
@@ -98,9 +111,10 @@ const SYSTEM_PROMPT = `あなたは家庭料理の献立を考えるアシスタ
 3. 在庫にない食材は missing に入れる。uses には在庫一覧にある食材名を、一覧の表記のまま書く。
 4. 塩・こしょう・砂糖・しょうゆ・みそ・油は家にある前提にし、uses にも missing にも書かない。
 5. 足りない食材はできるだけ少なくする。3案のうち少なくとも1案は、missing が0〜1品になるようにする（在庫にない「今日食べたいもの」は数えない）。買い足しの上限品数が指定されていれば、各案の missing をその数以内にする（在庫にない「今日食べたいもの」は数えない）。
-6. 3案は主菜の種類（肉・魚・卵・野菜など）を変える。「今日食べたいもの」が決まっているときは、調理法（焼く・煮る・揚げる・炒めるなど）を変える。
-7. 分量は指定された人数分にする。amount は「200g」「1/2個」「大さじ1」のように短く書く。
-8. steps は4〜6行の短い文にする。reason は、どの食材を使い切れるかが分かる1文にする。`
+6. 料理の種類（和食・中華・おつまみなど）が指定されたら、3案ともその種類の料理にする。指定がなければ自由に選ぶ。
+7. 3案は主菜の種類（肉・魚・卵・野菜など）を変える。「今日食べたいもの」が決まっているときは、調理法（焼く・煮る・揚げる・炒めるなど）を変える。
+8. 分量は指定された人数分にする。amount は「200g」「1/2個」「大さじ1」のように短く書く。
+9. steps は4〜6行の短い文にする。reason は、どの食材を使い切れるかが分かる1文にする。`
 
 function describeExpiry(expiry, today) {
   if (!expiry) return '期限なし'
@@ -124,7 +138,7 @@ function compareByExpiry(a, b) {
 }
 
 export function buildUserPrompt(request, retryReason = '') {
-  const { today, items, wants, servings, maxMissing } = request
+  const { today, items, wants, servings, maxMissing, cuisine } = request
   const sorted = [...items].sort(compareByExpiry)
   const expired = sorted.filter((item) => item.expiry && item.expiry < today)
   const priority = sorted.filter((item) => item.priority && !expired.includes(item))
@@ -144,6 +158,7 @@ export function buildUserPrompt(request, retryReason = '') {
   const lines = [
     `今日の日付：${today}`,
     `人数：${servings}人分`,
+    `料理の種類：${CUISINE_PROMPTS[cuisine] ?? '指定なし（お任せ）'}`,
     `買い足しの上限品数：${maxMissing === null ? '指定なし' : `${maxMissing}品まで`}`,
     '',
     '【今日食べたいもの（3案すべてに必ず使う）】',

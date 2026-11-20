@@ -32,7 +32,7 @@ STEP 6（AI献立提案）まで作成済み。買い物リスト・同期・費
 | 領域 | 採用技術 |
 | --- | --- |
 | 画面 | React（JavaScript）＋ Vite。`npm run dev` で開発サーバー、`npm run build` でビルド |
-| データ保存 | ブラウザのローカルストレージ（`pantry-items`、名前の候補と前回の単位・保管場所は `pantry-history`、在庫一覧の並び替えの選択は `pantry-sort`、買い物リストは `pantry-shopping`、同期コードは `pantry-sync-code`）。デモコードは sessionStorage（同期コードとは別） |
+| データ保存 | ブラウザのローカルストレージ（`pantry-items`、名前の候補と前回の単位・保管場所は `pantry-history`、在庫一覧の並び替えの選択は `pantry-sort`、献立の料理の種類は `pantry-cuisine`、最後のAI提案は `pantry-last-suggestion`、買い物リストは `pantry-shopping`、同期コードは `pantry-sync-code`）。デモコードは sessionStorage（同期コードとは別） |
 | 自分専用の同期 | Upstash Redis（`api/sync.js` 経由。PCとスマホでデータをそろえる）。キー `pantry:data` に在庫と買い物リストをまとめた1件のJSONで保存する。2台の編集がぶつかったら `updatedAt` が新しいほうを採用 |
 | サーバー処理 | Vercel関数（`api/` フォルダ。例：`api/suggest.js`、`api/sync.js`） |
 | AI | Claude API（モデルは環境変数 `ANTHROPIC_MODEL` で指定） |

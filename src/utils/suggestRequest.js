@@ -13,7 +13,7 @@ export function selectItemsForSuggestion(items) {
     .slice(0, MAX_SUGGEST_ITEMS)
 }
 
-export function buildSuggestRequest(items, { wants, servings, maxMissing }, today) {
+export function buildSuggestRequest(items, { wants, servings, maxMissing, cuisine }, today) {
   return {
     today,
     items: selectItemsForSuggestion(items).map((item) => ({
@@ -27,6 +27,7 @@ export function buildSuggestRequest(items, { wants, servings, maxMissing }, toda
     wants,
     servings,
     maxMissing,
+    cuisine,
   }
 }
 

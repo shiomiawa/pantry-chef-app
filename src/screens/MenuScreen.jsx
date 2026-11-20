@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react'
 import MenuCard from '../components/MenuCard.jsx'
 import WantedFoodsInput from '../components/WantedFoodsInput.jsx'
 import { usePantryItems } from '../hooks/usePantryItems.js'
+import { CUISINES, DEFAULT_CUISINE, getCuisineInfo, loadCuisine, saveCuisine } from '../utils/cuisine.js'
 import { todayString } from '../utils/date.js'
 import {
   MAX_SUGGEST_ITEMS,
@@ -31,6 +32,7 @@ export default function MenuScreen() {
   const [wants, setWants] = useState([])
   const [servings, setServings] = useState(2)
   const [maxMissing, setMaxMissing] = useState('')
+  const [cuisine, setCuisine] = useState(loadCuisine)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [suggestion, setSuggestion] = useState(loadLastSuggestion)
@@ -48,11 +50,11 @@ export default function MenuScreen() {
     try {
       const payload = buildSuggestRequest(
         items,
-        { wants, servings, maxMissing: maxMissing === '' ? null : Number(maxMissing) },
+        { wants, servings, maxMissing: maxMissing === '' ? null : Number(maxMissing), cuisine },
         todayString(),
       )
       const menus = await requestSuggestion(payload)
-      const next = { createdAt: new Date().toISOString(), wants, menus }
+      const next = { createdAt: new Date().toISOString(), wants, cuisine, menus }
       setSuggestion(next)
       saveLastSuggestion(next)
     } catch (suggestError) {
@@ -68,6 +70,30 @@ export default function MenuScreen() {
 
       <div className="panel suggest-form">
         <WantedFoodsInput wants={wants} onChange={setWants} stockNames={stockNames} />
+
+        <fieldset className="field">
+          <legend>料理の種類</legend>
+          <div className="chip-row">
+            {CUISINES.map((option) => (
+              <label key={option.key} className={cuisine === option.key ? 'chip chip--selected' : 'chip'}>
+                <input
+                  type="radio"
+                  name="suggest-cuisine"
+                  value={option.key}
+                  checked={cuisine === option.key}
+                  onChange={() => {
+                    setCuisine(option.key)
+                    saveCuisine(option.key)
+                  }}
+                />
+                <span className="chip__icon" aria-hidden="true">
+                  {option.icon}
+                </span>
+                {option.label}
+              </label>
+            ))}
+          </div>
+        </fieldset>
 
         <div className="field-row">
           <div className="field">
@@ -131,6 +157,9 @@ export default function MenuScreen() {
         <div className="menu-list">
           <p className="help-text">
             {formatDateTime(suggestion.createdAt)} の提案
+            {suggestion.cuisine &&
+              suggestion.cuisine !== DEFAULT_CUISINE &&
+              `・${getCuisineInfo(suggestion.cuisine).icon}${getCuisineInfo(suggestion.cuisine).label}`}
             {suggestion.wants.length > 0 && `（食べたい：${suggestion.wants.join('、')}）`}
           </p>
           {suggestion.menus.map((menu, index) => (
