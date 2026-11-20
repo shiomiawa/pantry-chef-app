@@ -1,4 +1,5 @@
 import { useId, useMemo, useState } from 'react'
+import { getCategoryInfo } from '../utils/category.js'
 import { buildTemplateCsv, decodeCsvBuffer, parseCsv } from '../utils/csv.js'
 import { todayString } from '../utils/date.js'
 import { downloadTextFile } from '../utils/download.js'
@@ -81,7 +82,7 @@ export default function CsvImportPanel({ onImport }) {
       <h3 className="panel__title">CSV取り込み（初回用）</h3>
       <p className="help-text">
         1行目は見出し（食材名,数量,単位,期限,保管場所）。期限は「2026-12-31」の形式で、空でも可。保管場所は
-        冷蔵・冷凍・常温 のどれか。取り込んだ食材は、今の在庫に追加されます。
+        冷蔵・冷凍・常温 のどれか。ジャンルは名前から自動で判断します（「ジャンル」列を足して指定も可）。取り込んだ食材は、今の在庫に追加されます。
       </p>
 
       <div className="button-row">
@@ -162,6 +163,9 @@ export default function CsvImportPanel({ onImport }) {
                         <td>{item.unit}</td>
                         <td>{item.expiry || '期限なし'}</td>
                         <td>{item.location}</td>
+                        <td>
+                          {getCategoryInfo(item.category).icon} {getCategoryInfo(item.category).label}
+                        </td>
                       </tr>
                     ))}
                   </tbody>

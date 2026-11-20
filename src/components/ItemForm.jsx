@@ -1,4 +1,5 @@
 import { useId, useRef, useState } from 'react'
+import { CATEGORIES, getItemCategory, guessCategory, isCategoryKey } from '../utils/category.js'
 import { addDays, addMonths, todayString } from '../utils/date.js'
 
 const LOCATIONS = ['冷蔵', '冷凍', '常温']
@@ -9,7 +10,7 @@ const EXPIRY_SHORTCUTS = [
   { label: '+1か月', getDate: (today) => addMonths(today, 1) },
   { label: '+3か月', getDate: (today) => addMonths(today, 3) },
 ]
-const DEFAULT_VALUES = { name: '', quantity: '1', unit: '個', expiry: '', location: '冷蔵' }
+const DEFAULT_VALUES = { name: '', quantity: '1', unit: '個', expiry: '', location: '冷蔵', category: 'other' }
 
 function toFormValues(item) {
   if (!item) return DEFAULT_VALUES
@@ -19,6 +20,7 @@ function toFormValues(item) {
     unit: item.unit,
     expiry: item.expiry ?? '',
     location: item.location,
+    category: getItemCategory(item),
   }
 }
 
@@ -27,6 +29,8 @@ export default function ItemForm({ mode, initialItem, history, nameSuggestions, 
   const [values, setValues] = useState(() => toFormValues(initialItem))
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
+  // ジャンルを手で選んだら、名前を打ち直しても自動で変えない
+  const [isCategoryManual, setIsCategoryManual] = useState(false)
   const nameInputRef = useRef(null)
   const idPrefix = useId()
   const isAddMode = mode === 'add'
@@ -38,7 +42,13 @@ export default function ItemForm({ mode, initialItem, history, nameSuggestions, 
   function handleNameChange(event) {
     const name = event.target.value
     const previous = isAddMode ? history[name.trim()] : null
-    setValues((prev) => (previous ? { ...prev, name, unit: previous.unit, location: previous.location } : { ...prev, name }))
+    setValues((prev) => {
+      const next = previous ? { ...prev, name, unit: previous.unit, location: previous.location } : { ...prev, name }
+      if (isAddMode && !isCategoryManual) {
+        next.category = isCategoryKey(previous?.category) ? previous.category : guessCategory(name)
+      }
+      return next
+    })
     setError('')
     setMessage('')
   }
@@ -62,11 +72,19 @@ export default function ItemForm({ mode, initialItem, history, nameSuggestions, 
       unit: values.unit.trim(),
       expiry: values.expiry,
       location: values.location,
+      category: values.category,
     })
 
     if (isAddMode) {
-      // 単位と保管場所は残し、名前・数量・期限だけ空に戻して続けて入力できるようにする
-      setValues((prev) => ({ ...prev, name: '', quantity: DEFAULT_VALUES.quantity, expiry: '' }))
+      // 単位と保管場所は残し、名前・数量・期限（とジャンル）を戻して続けて入力できるようにする
+      setValues((prev) => ({
+        ...prev,
+        name: '',
+        quantity: DEFAULT_VALUES.quantity,
+        expiry: '',
+        category: DEFAULT_VALUES.category,
+      }))
+      setIsCategoryManual(false)
       setError('')
       setMessage(`「${name}」を追加しました`)
       nameInputRef.current?.focus()
@@ -151,6 +169,33 @@ export default function ItemForm({ mode, initialItem, history, nameSuggestions, 
           </button>
         </div>
       </div>
+
+      <fieldset className="field">
+        <legend>ジャンル</legend>
+        <div className="chip-row">
+          {CATEGORIES.map((category) => (
+            <label
+              key={category.key}
+              className={values.category === category.key ? 'chip chip--selected' : 'chip'}
+            >
+              <input
+                type="radio"
+                name={`${idPrefix}-category`}
+                value={category.key}
+                checked={values.category === category.key}
+                onChange={() => {
+                  updateField('category', category.key)
+                  setIsCategoryManual(true)
+                }}
+              />
+              <span className="chip__icon" aria-hidden="true">
+                {category.icon}
+              </span>
+              {category.label}
+            </label>
+          ))}
+        </div>
+      </fieldset>
 
       <fieldset className="field">
         <legend>保管場所</legend>

@@ -36,6 +36,11 @@ function createId() {
   return `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`
 }
 
+// 名前の候補に残す「前回の値」。ジャンルは選ばれているときだけ残す
+function toHistoryEntry({ unit, location, category }) {
+  return category ? { unit, location, category } : { unit, location }
+}
+
 export function usePantryItems() {
   const [items, setItems] = useState(() => loadJson(STORAGE_KEY, [], Array.isArray))
   const [history, setHistory] = useState(() => loadJson(HISTORY_KEY, {}, isPlainObject))
@@ -48,8 +53,8 @@ export function usePantryItems() {
     saveJson(HISTORY_KEY, history)
   }, [history])
 
-  function rememberItem({ name, unit, location }) {
-    setHistory((prev) => ({ ...prev, [name]: { unit, location } }))
+  function rememberItem({ name, unit, location, category }) {
+    setHistory((prev) => ({ ...prev, [name]: toHistoryEntry({ unit, location, category }) }))
   }
 
   function addItem(data) {
@@ -70,8 +75,8 @@ export function usePantryItems() {
   // 名前の候補に、まだない食材だけを足す（既にある前回の値は上書きしない）
   function mergeIntoHistory(baseHistory, list) {
     const merged = { ...baseHistory }
-    for (const { name, unit, location } of list) {
-      if (!merged[name]) merged[name] = { unit, location }
+    for (const item of list) {
+      if (!merged[item.name]) merged[item.name] = toHistoryEntry(item)
     }
     return merged
   }
@@ -83,7 +88,7 @@ export function usePantryItems() {
     setItems((prev) => [...prev, ...newItems])
     setHistory((prev) => {
       const next = { ...prev }
-      for (const { name, unit, location } of newItems) next[name] = { unit, location }
+      for (const item of newItems) next[item.name] = toHistoryEntry(item)
       return next
     })
   }

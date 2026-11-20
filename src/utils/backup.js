@@ -1,3 +1,4 @@
+import { isCategoryKey } from './category.js'
 import { addDays } from './date.js'
 import { LOCATIONS, normalizeDate } from './importItems.js'
 
@@ -24,7 +25,9 @@ function isValidItem(item) {
     item.quantity >= 0 &&
     typeof item.unit === 'string' &&
     (item.expiry === '' || item.expiry === undefined || (typeof item.expiry === 'string' && normalizeDate(item.expiry) === item.expiry)) &&
-    LOCATIONS.includes(item.location)
+    LOCATIONS.includes(item.location) &&
+    (item.priority === undefined || typeof item.priority === 'boolean') &&
+    (item.category === undefined || isCategoryKey(item.category))
   )
 }
 
@@ -51,6 +54,8 @@ export function parseBackup(text) {
     unit: item.unit,
     expiry: item.expiry ?? '',
     location: item.location,
+    priority: item.priority === true,
+    ...(item.category ? { category: item.category } : {}),
     addedAt: typeof item.addedAt === 'string' ? item.addedAt : undefined,
   }))
   const history = data.history && typeof data.history === 'object' && !Array.isArray(data.history) ? data.history : null

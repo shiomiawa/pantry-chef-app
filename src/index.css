@@ -20,6 +20,17 @@
   --color-warning-bg: #fff8d6;
   --color-warning-accent: #f2c200;
 
+  /* ジャンルのアイコンの背景 */
+  --color-category-meat: #fde4e4;
+  --color-category-fish: #e0f0fb;
+  --color-category-vegetable: #e3f4e1;
+  --color-category-seasoning: #f6ecdc;
+  --color-category-other: #eeeaf6;
+
+  /* 最優先（★） */
+  --color-priority: #b7791f;
+  --color-priority-bg: #fdf3e1;
+
   --radius: 10px;
   --tab-bar-height: 60px;
 }
@@ -157,6 +168,53 @@ input {
   color: var(--color-danger-text);
 }
 
+/* ---- 並び替え ---- */
+.sort-control {
+  display: flex;
+  margin-bottom: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--color-surface);
+}
+
+.sort-control__button {
+  flex: 1;
+  min-height: 40px;
+  border: none;
+  border-left: 1px solid var(--color-border);
+  background: none;
+  color: var(--color-text-muted);
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+.sort-control__button:first-child {
+  border-left: none;
+}
+
+.sort-control__button--active {
+  background: var(--color-primary);
+  color: var(--color-primary-text);
+  font-weight: bold;
+}
+
+.list-section + .list-section {
+  margin-top: 16px;
+}
+
+.list-section__title {
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+}
+
+.list-section__count {
+  margin-left: 6px;
+  font-size: 0.8rem;
+  font-weight: normal;
+  color: var(--color-text-muted);
+}
+
 /* ---- 在庫一覧 ---- */
 .item-list {
   list-style: none;
@@ -193,13 +251,57 @@ input {
   flex: 1;
   min-width: 0;
   display: flex;
-  flex-direction: column;
-  gap: 2px;
-  padding: 10px 12px;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 8px 10px 10px;
   border: none;
   background: none;
   text-align: left;
   cursor: pointer;
+}
+
+.item-row__body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.category-icon {
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.category-icon--meat {
+  background: var(--color-category-meat);
+}
+
+.category-icon--fish {
+  background: var(--color-category-fish);
+}
+
+.category-icon--vegetable {
+  background: var(--color-category-vegetable);
+}
+
+.category-icon--seasoning {
+  background: var(--color-category-seasoning);
+}
+
+.category-icon--other {
+  background: var(--color-category-other);
+}
+
+.chip__icon {
+  margin-right: 4px;
 }
 
 .item-row__top {
@@ -221,13 +323,42 @@ input {
   color: var(--color-text-muted);
 }
 
-.item-row__decrement {
-  width: 56px;
+.item-row__action {
+  flex-shrink: 0;
+  width: 44px;
   border: none;
   border-left: 1px solid var(--color-border);
   background: none;
-  font-size: 1.5rem;
   cursor: pointer;
+}
+
+.item-row__decrement {
+  font-size: 1.5rem;
+}
+
+.item-row__priority {
+  font-size: 1.25rem;
+  color: var(--color-text-muted);
+}
+
+.item-row__priority--on {
+  color: var(--color-priority);
+  background: var(--color-priority-bg);
+}
+
+.item-row__delete {
+  font-size: 1.1rem;
+}
+
+.priority-badge {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--color-priority-bg);
+  color: var(--color-priority);
+  font-size: 0.75rem;
+  font-weight: bold;
 }
 
 .expiry-badge {

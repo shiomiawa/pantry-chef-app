@@ -1,3 +1,5 @@
+import { guessCategory, normalizeCategory } from './category.js'
+
 export const LOCATIONS = ['冷蔵', '冷凍', '常温']
 export const MAX_IMPORT_ROWS = 500
 
@@ -7,6 +9,7 @@ export const FIELDS = [
   { key: 'unit', label: '単位' },
   { key: 'expiry', label: '期限' },
   { key: 'location', label: '保管場所' },
+  { key: 'category', label: 'ジャンル' },
 ]
 
 const HEADER_ALIASES = {
@@ -15,6 +18,7 @@ const HEADER_ALIASES = {
   unit: ['unit', '単位'],
   expiry: ['expiry', '期限', '賞味期限', '消費期限', '期限日', '賞味期限日', '消費期限日'],
   location: ['location', '保管場所', '場所', '保存場所', '保管'],
+  category: ['category', 'ジャンル', 'カテゴリ', 'カテゴリー', '分類', '種類'],
 }
 
 const DEFAULT_QUANTITY = 1
@@ -114,7 +118,18 @@ export function buildImportPreview(dataRows, mapping) {
       }
     }
 
-    items.push({ name, quantity, unit: raw.unit || DEFAULT_UNIT, expiry, location })
+    // ジャンルの列がなければ（または読めなければ）、名前から推測する
+    let category = guessCategory(name)
+    if (raw.category) {
+      const normalized = normalizeCategory(raw.category)
+      if (normalized) {
+        category = normalized
+      } else {
+        warnings.push({ line, message: `ジャンル「${raw.category}」が読めないため、名前から判断しました` })
+      }
+    }
+
+    items.push({ name, quantity, unit: raw.unit || DEFAULT_UNIT, expiry, location, category })
   })
 
   return { items, skipped, warnings }
