@@ -14,14 +14,15 @@ pantry-chef（画面表示名：**パントリーシェフ**）。
 
 ## ルール
 
-- 食材データはブラウザのローカルストレージ（キー `pantry-items`）に保存する。データベースは使わない
-- Claude APIはブラウザから直接呼ばず、必ず `api/` フォルダのVercel関数経由で呼ぶ
-- APIキーなどの秘密情報はコードに書かず、環境変数（`ANTHROPIC_API_KEY`、`ANTHROPIC_MODEL`、`DEMO_CODE`）から読む。`.env` は `.gitignore` に入れる
-- ユーザーの実際の食材データ・写真はリポジトリに入れない。公開用はサンプルデータ（架空）だけにする
+- 食材データはブラウザのローカルストレージ（キー `pantry-items`）を主な保存先にする。自分専用の同期を有効にした端末だけ、Upstash Redisにも保存する（両方に保存）
+- Upstash Redisの用途は、自分専用の同期と、段階2のサーバー側の回数制限だけ。それ以外のデータベースは使わない
+- Claude APIとUpstash Redisはブラウザから直接呼ばず、必ず `api/` フォルダのVercel関数経由で呼ぶ
+- APIキーなどの秘密情報はコードに書かず、環境変数（`ANTHROPIC_API_KEY`、`ANTHROPIC_MODEL`、`DEMO_CODE`、`UPSTASH_REDIS_REST_URL`、`UPSTASH_REDIS_REST_TOKEN`、`SYNC_CODE`）から読む。`.env` は `.gitignore` に入れる
+- ユーザーの実際の食材データ・写真はリポジトリに入れない。実際の在庫CSVは `private/` フォルダ（`.gitignore` で除外済み）に置く。公開用はサンプルデータ（架空）だけにする
 - 画面の文言はすべて日本語。スマートフォンでの使いやすさを最優先にする
 - 頼まれた範囲だけを変更し、それ以外の機能・文言・レイアウトは変えない
 - 色はCSS変数で指定し、ベタ書きしない
-- 1つのSTEPが終わるたびに、動作確認の方法を説明してからGitにコミットする
+- 1つのSTEPが終わるたびに、動作確認の方法を説明してからGitにコミットし、GitHubにプッシュする
 
 ## 技術スタック
 
@@ -30,8 +31,9 @@ pantry-chef（画面表示名：**パントリーシェフ**）。
 | 領域 | 採用技術 |
 | --- | --- |
 | 画面 | React（JavaScript） |
-| データ保存 | ブラウザのローカルストレージ（`pantry-items`、買い物リストは `pantry-shopping`）、デモコードは sessionStorage |
-| サーバー処理 | Vercel関数（`api/` フォルダ。例：`api/suggest.js`） |
+| データ保存 | ブラウザのローカルストレージ（`pantry-items`、買い物リストは `pantry-shopping`、同期コードは `pantry-sync-code`）。デモコードは sessionStorage（同期コードとは別） |
+| 自分専用の同期 | Upstash Redis（`api/sync.js` 経由。PCとスマホでデータをそろえる）。キー `pantry:data` に在庫と買い物リストをまとめた1件のJSONで保存する。2台の編集がぶつかったら `updatedAt` が新しいほうを採用 |
+| サーバー処理 | Vercel関数（`api/` フォルダ。例：`api/suggest.js`、`api/sync.js`） |
 | AI | Claude API（モデルは環境変数 `ANTHROPIC_MODEL` で指定） |
 | 公開 | Vercel（GitHub連携）。GitHub Pagesは使わない |
 | ローカル確認 | `vercel dev`（API関数を含めて確認する） |
