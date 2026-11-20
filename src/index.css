@@ -743,6 +743,14 @@ input {
   vertical-align: middle;
 }
 
+.menu-card__fulfills {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 0 6px;
+  font-size: 0.9rem;
+}
+
 .menu-card__reason {
   margin: 0 0 8px;
   font-size: 0.9rem;

@@ -1,5 +1,4 @@
 import { useId, useState } from 'react'
-import { getCategoryInfo, guessCategory } from '../utils/category.js'
 
 export const MAX_WANTS = 3
 const MAX_WANT_LENGTH = 20
@@ -41,10 +40,8 @@ export default function WantedFoodsInput({ wants, onChange, stockNames }) {
       {wants.length > 0 && (
         <div className="chip-row">
           {wants.map((want) => (
+            // 料理名も入るので、食材のジャンルのアイコンは付けない（「サムギョプサル」が「その他」に見えないように）
             <span key={want} className="chip chip--selected want-chip">
-              <span className="chip__icon" aria-hidden="true">
-                {getCategoryInfo(guessCategory(want)).icon}
-              </span>
               {want}
               <button
                 type="button"
@@ -66,7 +63,7 @@ export default function WantedFoodsInput({ wants, onChange, stockNames }) {
           autoComplete="off"
           value={text}
           disabled={isFull}
-          placeholder={isFull ? `${MAX_WANTS}つまで入れました` : '例：サバ（在庫にない食材もOK）'}
+          placeholder={isFull ? `${MAX_WANTS}つまで入れました` : '例：サバ、よだれ鶏（食材でも料理名でもOK）'}
           onChange={(event) => {
             setText(event.target.value)
             setError('')

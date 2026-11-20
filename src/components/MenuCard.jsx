@@ -24,6 +24,12 @@ export default function MenuCard({ menu, index, wants, onAddToShopping, shopping
         <span className="menu-card__number">案{index + 1}</span>
         {menu.title}
       </h3>
+      {menu.fulfills?.length > 0 && (
+        <p className="menu-card__fulfills">
+          <span className="want-badge">食べたい</span>
+          {menu.fulfills.join('、')}
+        </p>
+      )}
       {menu.reason && <p className="menu-card__reason">{menu.reason}</p>}
 
       <h4 className="menu-card__heading">使う在庫</h4>

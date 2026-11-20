@@ -95,7 +95,7 @@ export default function MenuScreen() {
         <WantedFoodsInput wants={wants} onChange={setWants} stockNames={stockNames} />
 
         <fieldset className="field">
-          <legend>料理の種類</legend>
+          <legend>料理の種類（もう一度タップで外して「お任せ」に戻ります）</legend>
           <div className="chip-row">
             {CUISINES.map((option) => (
               <label key={option.key} className={cuisine === option.key ? 'chip chip--selected' : 'chip'}>
@@ -107,6 +107,13 @@ export default function MenuScreen() {
                   onChange={() => {
                     setCuisine(option.key)
                     saveCuisine(option.key)
+                  }}
+                  // 選んでいる種類をもう一度タップすると、選択を外して「お任せ」に戻す
+                  onClick={() => {
+                    if (cuisine === option.key && option.key !== DEFAULT_CUISINE) {
+                      setCuisine(DEFAULT_CUISINE)
+                      saveCuisine(DEFAULT_CUISINE)
+                    }
                   }}
                 />
                 <span className="chip__icon" aria-hidden="true">
