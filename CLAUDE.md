@@ -26,12 +26,12 @@ pantry-chef（画面表示名：**パントリーシェフ**）。
 
 ## 技術スタック
 
-現時点ではアプリ本体は未作成（`docs/design.md` と本ファイルのみ）。設計書に基づく予定の構成は次のとおり。
+STEP 4 で在庫画面まで作成済み。API関数・同期などは、設計書の STEP に沿って追加する予定。
 
 | 領域 | 採用技術 |
 | --- | --- |
-| 画面 | React（JavaScript） |
-| データ保存 | ブラウザのローカルストレージ（`pantry-items`、買い物リストは `pantry-shopping`、同期コードは `pantry-sync-code`）。デモコードは sessionStorage（同期コードとは別） |
+| 画面 | React（JavaScript）＋ Vite。`npm run dev` で開発サーバー、`npm run build` でビルド |
+| データ保存 | ブラウザのローカルストレージ（`pantry-items`、名前の候補と前回の単位・保管場所は `pantry-history`、買い物リストは `pantry-shopping`、同期コードは `pantry-sync-code`）。デモコードは sessionStorage（同期コードとは別） |
 | 自分専用の同期 | Upstash Redis（`api/sync.js` 経由。PCとスマホでデータをそろえる）。キー `pantry:data` に在庫と買い物リストをまとめた1件のJSONで保存する。2台の編集がぶつかったら `updatedAt` が新しいほうを採用 |
 | サーバー処理 | Vercel関数（`api/` フォルダ。例：`api/suggest.js`、`api/sync.js`） |
 | AI | Claude API（モデルは環境変数 `ANTHROPIC_MODEL` で指定） |
@@ -43,6 +43,8 @@ pantry-chef（画面表示名：**パントリーシェフ**）。
 ## 命名規約
 
 ### ファイルとフォルダ
+
+フォルダ構成：`src/screens/`（タブ単位の画面）、`src/components/`（部品）、`src/hooks/`（カスタムフック）、`src/utils/`（計算などの関数）、`api/`（Vercel関数）。色は `src/index.css` の `:root` にまとめる。
 
 | 対象 | 規約 | 例 |
 | --- | --- | --- |
