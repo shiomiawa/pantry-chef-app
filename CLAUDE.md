@@ -11,6 +11,7 @@ pantry-chef（画面表示名：**パントリーシェフ**）。
 - [docs/design.md](docs/design.md) に方針・データ構造・AI提案の仕様・費用対策がある。実装はこの設計書に従う
 - 設計書後半の「Claude Codeへの指示文」は、ユーザーが手順として使うもの。**ユーザーが指示した STEP 以外は実行しない**
 - 設計書と指示が食い違うときは、勝手に判断せずユーザーに確認する
+- 仕様に関わる変更（機能・データ項目・保存キー・画面の動き・AI提案のルールなど）をしたら、同じ作業の中で docs/design.md にも反映する
 
 ## ルール
 
@@ -26,7 +27,7 @@ pantry-chef（画面表示名：**パントリーシェフ**）。
 
 ## 技術スタック
 
-STEP 4 で在庫画面まで作成済み。API関数・同期などは、設計書の STEP に沿って追加する予定。
+STEP 6（AI献立提案）まで作成済み。買い物リスト・同期・費用対策などは、設計書の STEP に沿って追加する予定。
 
 | 領域 | 採用技術 |
 | --- | --- |
@@ -36,7 +37,7 @@ STEP 4 で在庫画面まで作成済み。API関数・同期などは、設計�
 | サーバー処理 | Vercel関数（`api/` フォルダ。例：`api/suggest.js`、`api/sync.js`） |
 | AI | Claude API（モデルは環境変数 `ANTHROPIC_MODEL` で指定） |
 | 公開 | Vercel（GitHub連携）。GitHub Pagesは使わない |
-| ローカル確認 | `vercel dev`（API関数を含めて確認する） |
+| ローカル確認 | `npm run dev` だけで API関数まで動く（`vite.config.js` の開発用ミドルウェア）。環境変数は `.env`（見本は `.env.example`）。`vercel dev` でも動く |
 
 ビルドツールやライブラリを追加するときは、そのSTEPで追記する。
 
@@ -44,7 +45,7 @@ STEP 4 で在庫画面まで作成済み。API関数・同期などは、設計�
 
 ### ファイルとフォルダ
 
-フォルダ構成：`src/screens/`（タブ単位の画面）、`src/components/`（部品）、`src/hooks/`（カスタムフック）、`src/utils/`（計算などの関数）、`api/`（Vercel関数）。色は `src/index.css` の `:root` にまとめる。
+フォルダ構成：`src/screens/`（タブ単位の画面）、`src/components/`（部品）、`src/hooks/`（カスタムフック）、`src/utils/`（計算などの関数）、`api/`（Vercel関数の入口）、`server/`（API関数の本体。Vercelにも開発サーバーにも依存しない形で書く）。色は `src/index.css` の `:root` にまとめる。
 
 | 対象 | 規約 | 例 |
 | --- | --- | --- |

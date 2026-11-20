@@ -611,6 +611,151 @@ input {
   color: inherit;
 }
 
+/* ---- 献立画面 ---- */
+.suggest-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.select {
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+  font: inherit;
+  color: inherit;
+}
+
+.inline-input {
+  display: flex;
+  gap: 8px;
+}
+
+.inline-input input {
+  flex: 1;
+  min-width: 0;
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
+.want-chip {
+  gap: 2px;
+  cursor: default;
+}
+
+.want-chip__remove {
+  margin-left: 4px;
+  padding: 0 4px;
+  border: none;
+  background: none;
+  color: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+}
+
+.suggest-button {
+  width: 100%;
+  font-size: 1.05rem;
+}
+
+.suggest-note {
+  margin: -4px 0 0;
+}
+
+.loading {
+  color: var(--color-text-muted);
+  text-align: center;
+}
+
+.menu-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.menu-list > .help-text {
+  margin: 0;
+}
+
+.menu-card {
+  padding: 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+}
+
+.menu-card__title {
+  margin: 0 0 6px;
+  font-size: 1.1rem;
+}
+
+.menu-card__number {
+  margin-right: 8px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: var(--color-primary-text);
+  font-size: 0.8rem;
+  vertical-align: middle;
+}
+
+.menu-card__reason {
+  margin: 0 0 8px;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+.menu-card__heading {
+  margin: 12px 0 4px;
+  font-size: 0.9rem;
+}
+
+.menu-card__ok {
+  margin: 0;
+  color: var(--color-primary);
+  font-size: 0.9rem;
+}
+
+.menu-card__steps {
+  margin: 0;
+  padding-left: 22px;
+  font-size: 0.95rem;
+}
+
+.ingredient-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.95rem;
+}
+
+.ingredient-list li {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 0;
+}
+
+.ingredient-list__amount {
+  margin-left: auto;
+  color: var(--color-text-muted);
+}
+
+.want-badge {
+  padding: 0 6px;
+  border-radius: 999px;
+  background: var(--color-priority-bg);
+  color: var(--color-priority);
+  font-size: 0.75rem;
+  font-weight: bold;
+}
+
 .notice-list {
   margin: 0 0 12px;
   padding-left: 20px;
