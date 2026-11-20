@@ -1,0 +1,62 @@
+# CLAUDE.md
+
+## プロジェクト概要
+
+pantry-chef（画面表示名：**パントリーシェフ**）。
+家にある食材を期限が近い順に使い切る献立をAIが提案し、足りない食材だけを買い物リストにするReactアプリ。
+ポートフォリオとして公開する。
+
+## 設計書
+
+- [docs/design.md](docs/design.md) に方針・データ構造・AI提案の仕様・費用対策がある。実装はこの設計書に従う
+- 設計書後半の「Claude Codeへの指示文」は、ユーザーが手順として使うもの。**ユーザーが指示した STEP 以外は実行しない**
+- 設計書と指示が食い違うときは、勝手に判断せずユーザーに確認する
+
+## ルール
+
+- 食材データはブラウザのローカルストレージ（キー `pantry-items`）に保存する。データベースは使わない
+- Claude APIはブラウザから直接呼ばず、必ず `api/` フォルダのVercel関数経由で呼ぶ
+- APIキーなどの秘密情報はコードに書かず、環境変数（`ANTHROPIC_API_KEY`、`ANTHROPIC_MODEL`、`DEMO_CODE`）から読む。`.env` は `.gitignore` に入れる
+- ユーザーの実際の食材データ・写真はリポジトリに入れない。公開用はサンプルデータ（架空）だけにする
+- 画面の文言はすべて日本語。スマートフォンでの使いやすさを最優先にする
+- 頼まれた範囲だけを変更し、それ以外の機能・文言・レイアウトは変えない
+- 色はCSS変数で指定し、ベタ書きしない
+- 1つのSTEPが終わるたびに、動作確認の方法を説明してからGitにコミットする
+
+## 技術スタック
+
+現時点ではアプリ本体は未作成（`docs/design.md` と本ファイルのみ）。設計書に基づく予定の構成は次のとおり。
+
+| 領域 | 採用技術 |
+| --- | --- |
+| 画面 | React（JavaScript） |
+| データ保存 | ブラウザのローカルストレージ（`pantry-items`、買い物リストは `pantry-shopping`）、デモコードは sessionStorage |
+| サーバー処理 | Vercel関数（`api/` フォルダ。例：`api/suggest.js`） |
+| AI | Claude API（モデルは環境変数 `ANTHROPIC_MODEL` で指定） |
+| 公開 | Vercel（GitHub連携）。GitHub Pagesは使わない |
+| ローカル確認 | `vercel dev`（API関数を含めて確認する） |
+
+ビルドツールやライブラリを追加するときは、そのSTEPで追記する。
+
+## 命名規約
+
+### ファイルとフォルダ
+
+| 対象 | 規約 | 例 |
+| --- | --- | --- |
+| Reactコンポーネント | PascalCase、1ファイル1コンポーネント、拡張子 `.jsx` | `PantryList.jsx` |
+| 画面（タブ単位） | `〇〇Screen` | `PantryScreen`、`MenuScreen`、`ShoppingScreen`、`SettingsScreen` |
+| 部品 | 役割を表す名詞 | `ItemForm`、`ItemRow`、`MenuCard`、`BottomTabBar` |
+| カスタムフック | `use` + PascalCase、拡張子 `.js` | `usePantryItems.js` |
+| ユーティリティ | camelCase、拡張子 `.js` | `expiryStatus.js`、`parseCsv.js` |
+| Vercel関数 | `api/` 直下、小文字の動詞・名詞 | `api/suggest.js` |
+| サンプルデータ | kebab-case | `sample-pantry.json` |
+
+### コード内
+
+- 変数・関数：camelCase（例：`daysUntilExpiry`、`handleAddItem`）
+- イベント処理の関数は `handle〇〇`、コンポーネントに渡すときのpropsは `on〇〇`（例：`onAdd={handleAddItem}`）
+- 真偽値は `is` / `has` / `can` で始める（例：`isExpired`、`hasMissing`）
+- 定数：UPPER_SNAKE_CASE（例：`STORAGE_KEY = 'pantry-items'`、`MAX_ITEMS = 50`）
+- 食材データの項目名は設計書どおり（`id`、`name`、`quantity`、`unit`、`expiry`、`location`、`addedAt`）
+- CSS変数：kebab-case で用途を表す名前（例：`--color-expired`、`--color-soon`、`--color-warning`、`--color-bg`）
