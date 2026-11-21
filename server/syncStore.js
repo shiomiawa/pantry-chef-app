@@ -33,14 +33,16 @@ function createRedis(env) {
   })
 }
 
-// 同期するデータ：在庫・買い物リスト・名前の候補・最後のAI提案
+// 同期するデータ：在庫・買い物リスト・名前の候補・最後のAI提案・保存したレシピ
+// （保存したレシピは後から足したので、ない記録も受け付ける）
 function validateData(data) {
   if (
     !isPlainObject(data) ||
     !Array.isArray(data.items) ||
     !Array.isArray(data.shopping) ||
     !isPlainObject(data.history) ||
-    !(data.lastSuggestion === null || isPlainObject(data.lastSuggestion))
+    !(data.lastSuggestion === null || isPlainObject(data.lastSuggestion)) ||
+    !(data.savedRecipes === undefined || Array.isArray(data.savedRecipes))
   ) {
     throw new SyncError(400, '同期するデータの形式が正しくありません')
   }

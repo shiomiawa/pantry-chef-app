@@ -10,6 +10,16 @@ export const CUISINES = [
 ]
 
 export const DEFAULT_CUISINE = 'omakase'
+
+// 保存したレシピのジャンル。key はサーバー（server/suggestMenus.js の GENRE_KEYS）と合わせる
+export const RECIPE_GENRES = [
+  ...CUISINES.filter((cuisine) => cuisine.key !== DEFAULT_CUISINE),
+  { key: 'other', label: 'その他', icon: '🍽️' },
+]
+
+export function getGenreInfo(key) {
+  return RECIPE_GENRES.find((genre) => genre.key === key) ?? RECIPE_GENRES[RECIPE_GENRES.length - 1]
+}
 // 選んだ種類は、次に開いたときも残す（この端末だけ）
 const CUISINE_KEY = 'pantry-cuisine'
 

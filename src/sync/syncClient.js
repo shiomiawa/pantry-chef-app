@@ -13,6 +13,7 @@ const SYNCED_KEYS = {
   shopping: { key: 'pantry-shopping', empty: [] },
   history: { key: 'pantry-history', empty: {} },
   lastSuggestion: { key: 'pantry-last-suggestion', empty: null },
+  savedRecipes: { key: 'pantry-saved-recipes', empty: [] },
 }
 
 // サーバーのデータでローカルを置き換えたときに出す。各画面はこれを受けて読み直す
@@ -94,6 +95,8 @@ function readLocalData() {
 
 function writeLocalData(data) {
   for (const [name, { key, empty }] of Object.entries(SYNCED_KEYS)) {
+    // 後から同期に足したデータ（保存したレシピ）が古い記録にないときは、この端末のものを残す
+    if (data && !(name in data)) continue
     const value = data?.[name] ?? empty
     writeStorage(key, value === null ? null : JSON.stringify(value))
   }

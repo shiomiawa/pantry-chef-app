@@ -86,7 +86,7 @@ export default function SyncPanel() {
     <div className="panel">
       <h3 className="panel__title">同期（自分のPCとスマホ）</h3>
       <p className="help-text">
-        同期コードを入れた端末どうしで、在庫・買い物リスト・名前の候補・最後の提案をそろえます。コードを知っている人だけが使えます。
+        同期コードを入れた端末どうしで、在庫・買い物リスト・名前の候補・最後の提案・保存したレシピをそろえます。コードを知っている人だけが使えます。
       </p>
 
       {isEnabled ? (

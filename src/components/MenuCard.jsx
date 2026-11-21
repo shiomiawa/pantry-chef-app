@@ -1,3 +1,5 @@
+import { getGenreInfo } from '../utils/cuisine.js'
+
 function matchesWant(name, wants) {
   const normalize = (value) => value.replace(/[\s　（）()]/g, '')
   return wants.some((want) => normalize(name).includes(normalize(want)) || normalize(want).includes(normalize(name)))
@@ -17,13 +19,37 @@ function IngredientList({ items, wants }) {
   )
 }
 
-export default function MenuCard({ menu, index, wants, onAddToShopping, shoppingNotice }) {
+export default function MenuCard({ menu, index, wants, onAddToShopping, shoppingNotice, isSaved, onSave, saveNotice }) {
+  const genre = menu.genre ? getGenreInfo(menu.genre) : null
   return (
     <article className="menu-card">
       <h3 className="menu-card__title">
         <span className="menu-card__number">案{index + 1}</span>
         {menu.title}
       </h3>
+      <div className="menu-card__meta">
+        {genre && (
+          <span className="menu-card__genre">
+            {genre.icon} {genre.label}
+          </span>
+        )}
+        {onSave && (
+          <button
+            type="button"
+            className={isSaved ? 'button menu-card__save menu-card__save--saved' : 'button menu-card__save'}
+            aria-pressed={isSaved}
+            disabled={isSaved}
+            onClick={() => onSave(menu)}
+          >
+            {isSaved ? '★ 保存済み' : '☆ 保存'}
+          </button>
+        )}
+      </div>
+      {saveNotice && (
+        <p className="form-error" role="alert">
+          {saveNotice}
+        </p>
+      )}
       {menu.fulfills?.length > 0 && (
         <p className="menu-card__fulfills">
           <span className="want-badge">食べたい</span>

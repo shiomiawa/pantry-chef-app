@@ -1,7 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import MenuCard from '../components/MenuCard.jsx'
+import SavedRecipeList from '../components/SavedRecipeList.jsx'
 import WantedFoodsInput from '../components/WantedFoodsInput.jsx'
 import { usePantryItems } from '../hooks/usePantryItems.js'
+import { MAX_SAVED_RECIPES, useSavedRecipes } from '../hooks/useSavedRecipes.js'
 import { useShoppingList } from '../hooks/useShoppingList.js'
 import { DATA_REPLACED_EVENT } from '../sync/syncClient.js'
 import { CUISINES, DEFAULT_CUISINE, getCuisineInfo, loadCuisine, saveCuisine } from '../utils/cuisine.js'
@@ -60,8 +62,28 @@ export default function MenuScreen() {
     setShoppingNotice({ index, text })
   }
 
+  // 「提案する」と「保存したレシピ」の切り替え
+  const [view, setView] = useState('suggest')
+  const { recipes, isSaved, saveRecipe, removeRecipe, updateGenre } = useSavedRecipes()
+  // どの案のカードに保存できなかった理由を出すか
+  const [saveNotice, setSaveNotice] = useState({ index: -1, text: '' })
+
+  function handleSave(menu, index) {
+    const result = saveRecipe(menu)
+    setSaveNotice({
+      index,
+      text:
+        result.ok || result.reason === 'duplicate'
+          ? ''
+          : `${MAX_SAVED_RECIPES}件まで保存できます。不要なレシピを削除してください`,
+    })
+  }
+
   const stockNames = useMemo(
-    () => [...new Set(items.filter((item) => item.quantity > 0).map((item) => item.name))].sort((a, b) => a.localeCompare(b, 'ja')),
+    () =>
+      [...new Set(items.filter((item) => item.quantity > 0).map((item) => item.name))].sort((a, b) =>
+        a.localeCompare(b, 'ja'),
+      ),
     [items],
   )
   const stockCount = items.filter((item) => item.quantity > 0).length
@@ -91,118 +113,159 @@ export default function MenuScreen() {
     <section className="screen">
       <h2 className="screen__title">献立</h2>
 
-      <div className="panel suggest-form">
-        <WantedFoodsInput wants={wants} onChange={setWants} stockNames={stockNames} />
-
-        <fieldset className="field">
-          <legend>料理の種類（もう一度タップで外して「お任せ」に戻ります）</legend>
-          <div className="chip-row">
-            {CUISINES.map((option) => (
-              <label key={option.key} className={cuisine === option.key ? 'chip chip--selected' : 'chip'}>
-                <input
-                  type="radio"
-                  name="suggest-cuisine"
-                  value={option.key}
-                  checked={cuisine === option.key}
-                  onChange={() => {
-                    setCuisine(option.key)
-                    saveCuisine(option.key)
-                  }}
-                  // 選んでいる種類をもう一度タップすると、選択を外して「お任せ」に戻す
-                  onClick={() => {
-                    if (cuisine === option.key && option.key !== DEFAULT_CUISINE) {
-                      setCuisine(DEFAULT_CUISINE)
-                      saveCuisine(DEFAULT_CUISINE)
-                    }
-                  }}
-                />
-                <span className="chip__icon" aria-hidden="true">
-                  {option.icon}
-                </span>
-                {option.label}
-              </label>
-            ))}
-          </div>
-        </fieldset>
-
-        <div className="field-row">
-          <div className="field">
-            <label htmlFor="suggest-servings">人数</label>
-            <select
-              id="suggest-servings"
-              className="select"
-              value={servings}
-              onChange={(event) => setServings(Number(event.target.value))}
-            >
-              {SERVING_OPTIONS.map((count) => (
-                <option key={count} value={count}>
-                  {count}人
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="field">
-            <label htmlFor="suggest-max-missing">買い足し</label>
-            <select
-              id="suggest-max-missing"
-              className="select"
-              value={maxMissing}
-              onChange={(event) => setMaxMissing(event.target.value)}
-            >
-              {MAX_MISSING_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-
-        <button type="button" className="button button--primary suggest-button" disabled={!canSuggest} onClick={handleSuggest}>
-          {isLoading ? '考え中…' : '今あるもので提案'}
+      <div className="sort-control" role="group" aria-label="表示の切り替え">
+        <button
+          type="button"
+          className={view === 'suggest' ? 'sort-control__button sort-control__button--active' : 'sort-control__button'}
+          aria-pressed={view === 'suggest'}
+          onClick={() => setView('suggest')}
+        >
+          提案する
         </button>
-        <p className="help-text suggest-note">提案すると在庫の内容がAIへ送信されます</p>
-        {stockCount > MAX_SUGGEST_ITEMS && (
-          <p className="help-text">
-            在庫が{MAX_SUGGEST_ITEMS}品を超えているため、★と期限が近いものから{MAX_SUGGEST_ITEMS}品を送ります
-          </p>
-        )}
-        {stockCount === 0 && wants.length === 0 && (
-          <p className="help-text">在庫がありません。在庫を登録するか、今日食べたいものを入れてください</p>
-        )}
-        {error && (
-          <p className="form-error" role="alert">
-            {error}
-          </p>
-        )}
+        <button
+          type="button"
+          className={view === 'saved' ? 'sort-control__button sort-control__button--active' : 'sort-control__button'}
+          aria-pressed={view === 'saved'}
+          onClick={() => setView('saved')}
+        >
+          保存したレシピ（{recipes.length}）
+        </button>
       </div>
 
-      {isLoading && (
-        <p className="loading" role="status">
-          AIが献立を考えています（10〜20秒ほどかかります）…
-        </p>
+      {view === 'saved' && (
+        <SavedRecipeList
+          recipes={recipes}
+          stockNames={stockNames}
+          onRemove={removeRecipe}
+          onChangeGenre={updateGenre}
+          onAddToShopping={addShoppingItems}
+        />
       )}
 
-      {!isLoading && suggestion && (
-        <div className="menu-list">
-          <p className="help-text">
-            {formatDateTime(suggestion.createdAt)} の提案
-            {suggestion.cuisine &&
-              suggestion.cuisine !== DEFAULT_CUISINE &&
-              `・${getCuisineInfo(suggestion.cuisine).icon}${getCuisineInfo(suggestion.cuisine).label}`}
-            {suggestion.wants.length > 0 && `（食べたい：${suggestion.wants.join('、')}）`}
-          </p>
-          {suggestion.menus.map((menu, index) => (
-            <MenuCard
-              key={`${menu.title}-${index}`}
-              menu={menu}
-              index={index}
-              wants={suggestion.wants}
-              onAddToShopping={(target) => handleAddToShopping(target, index)}
-              shoppingNotice={shoppingNotice.index === index ? shoppingNotice.text : ''}
-            />
-          ))}
-        </div>
+      {view === 'suggest' && (
+        <>
+          <div className="panel suggest-form">
+            <WantedFoodsInput wants={wants} onChange={setWants} stockNames={stockNames} />
+
+            <fieldset className="field">
+              <legend>料理の種類（もう一度タップで外して「お任せ」に戻ります）</legend>
+              <div className="chip-row">
+                {CUISINES.map((option) => (
+                  <label key={option.key} className={cuisine === option.key ? 'chip chip--selected' : 'chip'}>
+                    <input
+                      type="radio"
+                      name="suggest-cuisine"
+                      value={option.key}
+                      checked={cuisine === option.key}
+                      onChange={() => {
+                        setCuisine(option.key)
+                        saveCuisine(option.key)
+                      }}
+                      // 選んでいる種類をもう一度タップすると、選択を外して「お任せ」に戻す
+                      onClick={() => {
+                        if (cuisine === option.key && option.key !== DEFAULT_CUISINE) {
+                          setCuisine(DEFAULT_CUISINE)
+                          saveCuisine(DEFAULT_CUISINE)
+                        }
+                      }}
+                    />
+                    <span className="chip__icon" aria-hidden="true">
+                      {option.icon}
+                    </span>
+                    {option.label}
+                  </label>
+                ))}
+              </div>
+            </fieldset>
+
+            <div className="field-row">
+              <div className="field">
+                <label htmlFor="suggest-servings">人数</label>
+                <select
+                  id="suggest-servings"
+                  className="select"
+                  value={servings}
+                  onChange={(event) => setServings(Number(event.target.value))}
+                >
+                  {SERVING_OPTIONS.map((count) => (
+                    <option key={count} value={count}>
+                      {count}人
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="field">
+                <label htmlFor="suggest-max-missing">買い足し</label>
+                <select
+                  id="suggest-max-missing"
+                  className="select"
+                  value={maxMissing}
+                  onChange={(event) => setMaxMissing(event.target.value)}
+                >
+                  {MAX_MISSING_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              className="button button--primary suggest-button"
+              disabled={!canSuggest}
+              onClick={handleSuggest}
+            >
+              {isLoading ? '考え中…' : '今あるもので提案'}
+            </button>
+            <p className="help-text suggest-note">提案すると在庫の内容がAIへ送信されます</p>
+            {stockCount > MAX_SUGGEST_ITEMS && (
+              <p className="help-text">
+                在庫が{MAX_SUGGEST_ITEMS}品を超えているため、★と期限が近いものから{MAX_SUGGEST_ITEMS}品を送ります
+              </p>
+            )}
+            {stockCount === 0 && wants.length === 0 && (
+              <p className="help-text">在庫がありません。在庫を登録するか、今日食べたいものを入れてください</p>
+            )}
+            {error && (
+              <p className="form-error" role="alert">
+                {error}
+              </p>
+            )}
+          </div>
+
+          {isLoading && (
+            <p className="loading" role="status">
+              AIが献立を考えています（10〜20秒ほどかかります）…
+            </p>
+          )}
+
+          {!isLoading && suggestion && (
+            <div className="menu-list">
+              <p className="help-text">
+                {formatDateTime(suggestion.createdAt)} の提案
+                {suggestion.cuisine &&
+                  suggestion.cuisine !== DEFAULT_CUISINE &&
+                  `・${getCuisineInfo(suggestion.cuisine).icon}${getCuisineInfo(suggestion.cuisine).label}`}
+                {suggestion.wants.length > 0 && `（食べたい：${suggestion.wants.join('、')}）`}
+              </p>
+              {suggestion.menus.map((menu, index) => (
+                <MenuCard
+                  key={`${menu.title}-${index}`}
+                  menu={menu}
+                  index={index}
+                  wants={suggestion.wants}
+                  onAddToShopping={(target) => handleAddToShopping(target, index)}
+                  shoppingNotice={shoppingNotice.index === index ? shoppingNotice.text : ''}
+                  isSaved={isSaved(menu.title)}
+                  onSave={(target) => handleSave(target, index)}
+                  saveNotice={saveNotice.index === index ? saveNotice.text : ''}
+                />
+              ))}
+            </div>
+          )}
+        </>
       )}
     </section>
   )

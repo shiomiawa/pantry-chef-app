@@ -16,6 +16,9 @@ export const LIMITS = {
 
 const LOCATIONS = ['冷蔵', '冷凍', '常温']
 
+// 各案のジャンル（レシピの保存で使う）。key は画面側（src/utils/cuisine.js の RECIPE_GENRES）と合わせる
+const GENRE_KEYS = ['otsumami', 'washoku', 'yoshoku', 'chuka', 'korean', 'asian', 'other']
+
 // 料理の種類。key は画面側（src/utils/cuisine.js）と合わせる。omakase は種類を指定しない
 const CUISINE_PROMPTS = {
   otsumami: 'おつまみ（お酒に合う、少量で手早く作れる料理）',
@@ -117,7 +120,8 @@ const SYSTEM_PROMPT = `あなたは家庭料理の献立を考えるアシスタ
 6. 料理の種類（和食・中華・おつまみなど）が指定されたら、3案ともその種類の料理にする。指定がなければ自由に選ぶ。料理名で指定された案は、料理の種類より料理名を優先する。
 7. 3案は主菜の種類（肉・魚・卵・野菜など）を変える。「今日食べたいもの」が決まっているときは、調理法（焼く・煮る・揚げる・炒めるなど）を変える。
 8. 分量は指定された人数分にする。amount は「200g」「1/2個」「大さじ1」のように短く書く。
-9. steps は4〜6行の短い文にする。reason は、どの食材を使い切れるかが分かる1文にする。`
+9. steps は4〜6行の短い文にする。reason は、どの食材を使い切れるかが分かる1文にする。
+10. genre には各案のジャンルを書く：otsumami（お酒のつまみ向き）・washoku（和食）・yoshoku（洋食）・chuka（中華）・korean（韓国）・asian（タイ・ベトナムなどのアジア料理）・other（どれにも当てはまらない）。`
 
 function describeExpiry(expiry, today) {
   if (!expiry) return '期限なし'
@@ -218,8 +222,9 @@ export const MENU_SCHEMA = {
           steps: { type: 'array', items: { type: 'string' } },
           reason: { type: 'string' },
           fulfills: { type: 'array', items: { type: 'string' } },
+          genre: { type: 'string', enum: GENRE_KEYS },
         },
-        required: ['title', 'uses', 'missing', 'steps', 'reason', 'fulfills'],
+        required: ['title', 'uses', 'missing', 'steps', 'reason', 'fulfills', 'genre'],
         additionalProperties: false,
       },
     },
@@ -310,6 +315,7 @@ export function validateMenus(data, request) {
       missing,
       steps: steps.slice(0, 8),
       reason: cleanText(raw.reason),
+      genre: GENRE_KEYS.includes(raw.genre) ? raw.genre : 'other',
       // 画面で「食べたい：〇〇」と出すため、入力の表記にそろえて残す
       fulfills: request.wants.filter((want) => answers(fulfills, want) || namesMatch(title, want)),
     })
