@@ -12,7 +12,8 @@ export default async function handler(req, res) {
 
   try {
     const body = typeof req.body === 'string' ? JSON.parse(req.body) : req.body
-    const result = await suggestMenus(body, process.env)
+    // デモコード（または自分専用の同期コード）はヘッダー X-Access-Code で受け取る（URLに載せるとログに残りやすいため）
+    const result = await suggestMenus(body, process.env, req.headers?.['x-access-code'])
     res.status(200).json(result)
   } catch (error) {
     // APIキーや内部の情報は返さず、利用者向けの短い文だけを返す

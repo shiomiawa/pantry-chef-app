@@ -32,12 +32,13 @@ export function buildSuggestRequest(items, { wants, servings, maxMissing, cuisin
   }
 }
 
-export async function requestSuggestion(payload) {
+// accessCode：デモコード、または自分専用の同期コード
+export async function requestSuggestion(payload, accessCode) {
   let response
   try {
     response = await fetch('/api/suggest', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'X-Access-Code': accessCode },
       body: JSON.stringify(payload),
     })
   } catch {

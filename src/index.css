@@ -667,6 +667,15 @@ input {
   color: inherit;
 }
 
+.text-input {
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  background: var(--color-surface);
+}
+
 .inline-input {
   display: flex;
   gap: 8px;

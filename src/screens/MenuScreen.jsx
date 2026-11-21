@@ -5,7 +5,15 @@ import WantedFoodsInput from '../components/WantedFoodsInput.jsx'
 import { usePantryItems } from '../hooks/usePantryItems.js'
 import { MAX_SAVED_RECIPES, useSavedRecipes } from '../hooks/useSavedRecipes.js'
 import { useShoppingList } from '../hooks/useShoppingList.js'
-import { DATA_REPLACED_EVENT } from '../sync/syncClient.js'
+import { useSyncState } from '../hooks/useSyncState.js'
+import { DATA_REPLACED_EVENT, getSyncCode } from '../sync/syncClient.js'
+import {
+  DAILY_SUGGEST_LIMIT,
+  getTodayCount,
+  incrementTodayCount,
+  loadDemoCode,
+  saveDemoCode,
+} from '../utils/demoAccess.js'
 import { CUISINES, DEFAULT_CUISINE, getCuisineInfo, loadCuisine, saveCuisine } from '../utils/cuisine.js'
 import { todayString } from '../utils/date.js'
 import {
@@ -87,7 +95,14 @@ export default function MenuScreen() {
     [items],
   )
   const stockCount = items.filter((item) => item.quantity > 0).length
-  const canSuggest = !isLoading && (stockCount > 0 || wants.length > 0)
+  // API費用対策：同期コードを入れた自分の端末はデモコード不要・回数の上限なし。
+  // それ以外はデモコードが必要で、1日の回数に上限がある（回数はブラウザ側の目安）
+  const isOwner = useSyncState().status !== 'off'
+  const [demoCode, setDemoCode] = useState(loadDemoCode)
+  const [todayCount, setTodayCount] = useState(getTodayCount)
+  const isOverLimit = !isOwner && todayCount >= DAILY_SUGGEST_LIMIT
+  const hasAccess = isOwner || demoCode.trim() !== ''
+  const canSuggest = !isLoading && hasAccess && !isOverLimit && (stockCount > 0 || wants.length > 0)
 
   async function handleSuggest() {
     setIsLoading(true)
@@ -98,10 +113,12 @@ export default function MenuScreen() {
         { wants, servings, maxMissing: maxMissing === '' ? null : Number(maxMissing), cuisine },
         todayString(),
       )
-      const menus = await requestSuggestion(payload)
+      const menus = await requestSuggestion(payload, isOwner ? getSyncCode() : demoCode.trim())
       const next = { createdAt: new Date().toISOString(), wants, cuisine, menus }
       setSuggestion(next)
       saveLastSuggestion(next)
+      // 数えるのは提案が成功したときだけ（コード違いなどで失敗した回は数えない）
+      setTodayCount(incrementTodayCount())
     } catch (suggestError) {
       setError(suggestError.message)
     } finally {
@@ -211,6 +228,23 @@ export default function MenuScreen() {
               </div>
             </div>
 
+            {!isOwner && (
+              <div className="field">
+                <label htmlFor="suggest-demo-code">デモコード（AI提案を試すための合言葉）</label>
+                <input
+                  id="suggest-demo-code"
+                  className="text-input"
+                  type="password"
+                  autoComplete="off"
+                  value={demoCode}
+                  onChange={(event) => {
+                    setDemoCode(event.target.value)
+                    saveDemoCode(event.target.value.trim())
+                  }}
+                />
+              </div>
+            )}
+
             <button
               type="button"
               className="button button--primary suggest-button"
@@ -220,6 +254,15 @@ export default function MenuScreen() {
               {isLoading ? '考え中…' : '今あるもので提案'}
             </button>
             <p className="help-text suggest-note">提案すると在庫の内容がAIへ送信されます</p>
+            <p className="help-text suggest-note">
+              {isOwner
+                ? `今日の提案：${todayCount}回（同期中の端末は上限なし）`
+                : `今日の提案：${todayCount}／${DAILY_SUGGEST_LIMIT}回`}
+            </p>
+            {isOverLimit && (
+              <p className="form-error">今日の提案は{DAILY_SUGGEST_LIMIT}回までです。また明日お試しください</p>
+            )}
+            {!isOwner && !hasAccess && <p className="help-text">デモコードを入れると提案できます</p>}
             {stockCount > MAX_SUGGEST_ITEMS && (
               <p className="help-text">
                 在庫が{MAX_SUGGEST_ITEMS}品を超えているため、★と期限が近いものから{MAX_SUGGEST_ITEMS}品を送ります

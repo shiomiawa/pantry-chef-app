@@ -1,5 +1,6 @@
 // AI献立提案の本体。Vercel関数（api/suggest.js）と、ローカル開発用の Vite サーバーの両方から呼ぶ。
 // APIキーとモデル名は環境変数から受け取り、コードには書かない。
+import { createHash, timingSafeEqual } from 'node:crypto'
 import Anthropic from '@anthropic-ai/sdk'
 
 export const LIMITS = {
@@ -40,6 +41,29 @@ export class SuggestError extends Error {
     super(message)
     this.status = status
   }
+}
+
+// ---- 利用できる人の確認（API費用対策） ----
+
+// 長さの違いや一致した文字数から推測されないよう、ハッシュにそろえてから一定時間で比べる
+function codesMatch(given, expected) {
+  const a = createHash('sha256').update(String(given)).digest()
+  const b = createHash('sha256').update(String(expected)).digest()
+  return timingSafeEqual(a, b)
+}
+
+// デモコード（DEMO_CODE）か、自分専用の同期コード（SYNC_CODE）が合うときだけ Claude API を呼ぶ。
+// DEMO_CODE が未設定なら、設定忘れで誰でも使える状態にならないよう、誰にも使わせない
+export function checkAccess(code, env) {
+  if (!env.DEMO_CODE) {
+    console.error('[suggest] DEMO_CODE が未設定のため、AI提案を止めています')
+    throw new SuggestError(503, 'AI提案は今使えません（サーバーの設定が終わっていません）')
+  }
+  const isAllowed =
+    typeof code === 'string' &&
+    code !== '' &&
+    (codesMatch(code, env.DEMO_CODE) || (Boolean(env.SYNC_CODE) && codesMatch(code, env.SYNC_CODE)))
+  if (!isAllowed) throw new SuggestError(401, 'デモコードが違います')
 }
 
 // ---- 入力の確認 ----
@@ -348,7 +372,10 @@ function toUserFacingError(error) {
   return new SuggestError(502, '提案を作れませんでした。時間をおいてお試しください')
 }
 
-export async function suggestMenus(body, env) {
+export async function suggestMenus(body, env, accessCode) {
+  // コードが合わなければ、Claude API を呼ばない（料金がかからない）
+  checkAccess(accessCode, env)
+
   if (!env.ANTHROPIC_API_KEY || !env.ANTHROPIC_MODEL) {
     // どの変数が足りないかは画面に出さず、サーバーのログにだけ残す
     console.error('[suggest] ANTHROPIC_API_KEY または ANTHROPIC_MODEL が未設定です')
