@@ -1,17 +1,20 @@
 import { getGenreInfo } from '../utils/cuisine.js'
+import { findBestMatch } from '../utils/names.js'
 
 function matchesWant(name, wants) {
   const normalize = (value) => value.replace(/[\s　（）()]/g, '')
   return wants.some((want) => normalize(name).includes(normalize(want)) || normalize(want).includes(normalize(name)))
 }
 
-function IngredientList({ items, wants }) {
+// findStock：在庫にある食材なら、その在庫の名前を返す（「足りない食材」のときだけ渡す）
+function IngredientList({ items, wants, findStock }) {
   return (
     <ul className="ingredient-list">
       {items.map((item, index) => (
         <li key={`${item.name}-${index}`}>
           {matchesWant(item.name, wants) && <span className="want-badge">食べたい</span>}
           <span className="ingredient-list__name">{item.name}</span>
+          {findStock?.(item.name) && <span className="stock-badge">在庫あり（{findStock(item.name)}）</span>}
           {item.amount && <span className="ingredient-list__amount">{item.amount}</span>}
         </li>
       ))}
@@ -19,8 +22,21 @@ function IngredientList({ items, wants }) {
   )
 }
 
-export default function MenuCard({ menu, index, wants, onAddToShopping, shoppingNotice, isSaved, onSave, saveNotice }) {
+export default function MenuCard({
+  menu,
+  index,
+  wants,
+  stockNames = [],
+  onAddToShopping,
+  shoppingNotice,
+  isSaved,
+  onSave,
+  saveNotice,
+}) {
   const genre = menu.genre ? getGenreInfo(menu.genre) : null
+  // AIに送らなかった在庫（51品目以降）と重なることがあるので、全在庫と照らし合わせる
+  const findStock = (name) => findBestMatch(stockNames, name)
+  const toBuy = menu.missing.filter((item) => !findStock(item.name))
   return (
     <article className="menu-card">
       <h3 className="menu-card__title">
@@ -64,10 +80,14 @@ export default function MenuCard({ menu, index, wants, onAddToShopping, shopping
       <h4 className="menu-card__heading">足りない食材</h4>
       {menu.missing.length > 0 ? (
         <>
-          <IngredientList items={menu.missing} wants={wants} />
-          {onAddToShopping && (
-            <button type="button" className="button menu-card__shopping" onClick={() => onAddToShopping(menu)}>
-              🛒 足りない食材を買い物リストへ（{menu.missing.length}品）
+          <IngredientList items={menu.missing} wants={wants} findStock={findStock} />
+          {onAddToShopping && toBuy.length > 0 && (
+            <button
+              type="button"
+              className="button menu-card__shopping"
+              onClick={() => onAddToShopping({ ...menu, missing: toBuy })}
+            >
+              🛒 足りない食材を買い物リストへ（{toBuy.length}品）
             </button>
           )}
           {shoppingNotice && (

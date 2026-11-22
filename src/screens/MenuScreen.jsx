@@ -328,6 +328,7 @@ export default function MenuScreen() {
                   menu={menu}
                   index={index}
                   wants={suggestion.wants}
+                  stockNames={stockNames}
                   onAddToShopping={(target) => handleAddToShopping(target, index)}
                   shoppingNotice={shoppingNotice.index === index ? shoppingNotice.text : ''}
                   isSaved={isSaved(menu.title)}

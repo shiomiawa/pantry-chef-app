@@ -2,11 +2,11 @@ import { saveSyncedJson } from '../sync/syncClient.js'
 import { compareByExpiry } from './expiryStatus.js'
 
 // サーバー（server/suggestMenus.js）の上限と合わせる
-export const MAX_SUGGEST_ITEMS = 50
+export const MAX_SUGGEST_ITEMS = 150
 const MAX_NAME_LENGTH = 40
 const LAST_SUGGESTION_KEY = 'pantry-last-suggestion'
 
-// 送る在庫を選ぶ：数量0は除き、最優先（★）→ 期限が近い順に50品まで
+// 送る在庫を選ぶ：数量0は除き、最優先（★）→ 期限が近い順に150品まで
 export function selectItemsForSuggestion(items) {
   return items
     .filter((item) => item.quantity > 0)
