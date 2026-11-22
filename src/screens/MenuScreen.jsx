@@ -45,6 +45,8 @@ export default function MenuScreen() {
   const [servings, setServings] = useState(2)
   const [maxMissing, setMaxMissing] = useState('')
   const [cuisine, setCuisine] = useState(loadCuisine)
+  // 料理名を入れたとき、3案ともその料理のアレンジ違いにするか
+  const [dishVariations, setDishVariations] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
   const [suggestion, setSuggestion] = useState(loadLastSuggestion)
@@ -110,11 +112,23 @@ export default function MenuScreen() {
     try {
       const payload = buildSuggestRequest(
         items,
-        { wants, servings, maxMissing: maxMissing === '' ? null : Number(maxMissing), cuisine },
+        {
+          wants,
+          servings,
+          maxMissing: maxMissing === '' ? null : Number(maxMissing),
+          cuisine,
+          dishVariations: dishVariations && wants.length > 0,
+        },
         todayString(),
       )
       const menus = await requestSuggestion(payload, isOwner ? getSyncCode() : demoCode.trim())
-      const next = { createdAt: new Date().toISOString(), wants, cuisine, menus }
+      const next = {
+        createdAt: new Date().toISOString(),
+        wants,
+        cuisine,
+        dishVariations: dishVariations && wants.length > 0,
+        menus,
+      }
       setSuggestion(next)
       saveLastSuggestion(next)
       // 数えるのは提案が成功したときだけ（コード違いなどで失敗した回は数えない）
@@ -163,6 +177,20 @@ export default function MenuScreen() {
         <>
           <div className="panel suggest-form">
             <WantedFoodsInput wants={wants} onChange={setWants} stockNames={stockNames} />
+            {wants.length > 0 && (
+              <label className="toggle">
+                <input
+                  type="checkbox"
+                  checked={dishVariations}
+                  onChange={(event) => setDishVariations(event.target.checked)}
+                />
+                <span className="toggle__switch" aria-hidden="true" />
+                <span>
+                  この料理を3通り提案する
+                  <span className="toggle__note">料理名を入れたとき、3案ともその料理のアレンジ違いにします</span>
+                </span>
+              </label>
+            )}
 
             <fieldset className="field">
               <legend>料理の種類（もう一度タップで外して「お任せ」に戻ります）</legend>
@@ -291,7 +319,8 @@ export default function MenuScreen() {
                 {suggestion.cuisine &&
                   suggestion.cuisine !== DEFAULT_CUISINE &&
                   `・${getCuisineInfo(suggestion.cuisine).icon}${getCuisineInfo(suggestion.cuisine).label}`}
-                {suggestion.wants.length > 0 && `（食べたい：${suggestion.wants.join('、')}）`}
+                {suggestion.wants.length > 0 &&
+                  `（食べたい：${suggestion.wants.join('、')}${suggestion.dishVariations ? '・3通り' : ''}）`}
               </p>
               {suggestion.menus.map((menu, index) => (
                 <MenuCard

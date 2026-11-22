@@ -667,6 +667,62 @@ input {
   color: inherit;
 }
 
+/* オン・オフの切り替え（チェックボックスをスイッチの見た目にする） */
+.toggle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 0.95rem;
+}
+
+.toggle input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.toggle__switch {
+  flex-shrink: 0;
+  position: relative;
+  width: 44px;
+  height: 26px;
+  border-radius: 999px;
+  background: var(--color-border);
+  transition: background 0.15s;
+}
+
+.toggle__switch::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--color-surface);
+  transition: transform 0.15s;
+}
+
+.toggle input:checked + .toggle__switch {
+  background: var(--color-primary);
+}
+
+.toggle input:checked + .toggle__switch::after {
+  transform: translateX(18px);
+}
+
+.toggle input:focus-visible + .toggle__switch {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.toggle__note {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
 .text-input {
   width: 100%;
   min-height: 44px;

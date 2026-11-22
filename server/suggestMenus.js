@@ -122,8 +122,10 @@ export function validateRequest(body) {
       : null
 
   const cuisine = Object.hasOwn(CUISINE_PROMPTS, body.cuisine) ? body.cuisine : 'omakase'
+  // 料理名を入れたとき、3案ともその料理のアレンジ違いにするか（画面の切り替え）
+  const dishVariations = body.dishVariations === true && wants.length > 0
 
-  return { today: body.today, items, wants, servings, maxMissing, cuisine }
+  return { today: body.today, items, wants, servings, maxMissing, cuisine, dishVariations }
 }
 
 // ---- プロンプト ----
@@ -136,6 +138,7 @@ const SYSTEM_PROMPT = `あなたは家庭料理の献立を考えるアシスタ
 1. 「今日食べたいもの」は、食材名（例：サバ）か料理名（例：よだれ鶏）のどちらか。wants に、入力をそのまま input に書き、食材なら type を ingredient、料理名なら dish にする。
    - 食材なら、3案すべて（料理名で指定された案を除く）に必ず使う。在庫にあれば uses、なければ missing に入れる。
    - 料理名なら、案1をその料理にする（在庫を優先して使い、足りない材料は missing に入れる）。料理名が2つ以上あれば、案1・案2…の順に1つずつ割り当てる。料理名を割り当てなかった案は、在庫を使ったほかの料理にする。
+   - ただし「料理名を3通り」が「はい」のときは、3案すべてを料理名の料理のアレンジ違い（具材・味付け・作り方を変える）にする。期限の近い食材や★の食材は、アレンジの具材として優先して使う。料理名が2つ以上あれば、3案をそれらに割り振る。
    - 各案の fulfills には、その案が応えた「今日食べたいもの」の input を、入力のまま書く（応えていなければ空の配列）。
 2. 期限切れ・期限が近い食材と、最優先（★）の食材を優先して使う。期限切れの食材は、加熱するなど安全に食べられる使い方にする。
 3. 在庫にない食材は missing に入れる。uses には在庫一覧にある食材名を、一覧の表記のまま書く。
@@ -169,7 +172,7 @@ function compareByExpiry(a, b) {
 }
 
 export function buildUserPrompt(request, retryReason = '') {
-  const { today, items, wants, servings, maxMissing, cuisine } = request
+  const { today, items, wants, servings, maxMissing, cuisine, dishVariations } = request
   const sorted = [...items].sort(compareByExpiry)
   const expired = sorted.filter((item) => item.expiry && item.expiry < today)
   const priority = sorted.filter((item) => item.priority && !expired.includes(item))
@@ -194,6 +197,7 @@ export function buildUserPrompt(request, retryReason = '') {
     '',
     '【今日食べたいもの（食材なら3案すべてに使う／料理名なら案1から順にその料理にする）】',
     wantLines,
+    `料理名を3通り：${dishVariations ? 'はい（料理名なら3案ともその料理のアレンジ違いにする）' : 'いいえ'}`,
     '',
     '【期限切れの在庫】',
     list(expired),
@@ -346,11 +350,21 @@ export function validateMenus(data, request) {
   }
 
   // 料理名の「今日食べたいもの」は、どれか1案がその料理になっていること（表記ゆれは fulfills で確かめる）
-  const missingDishes = request.wants.filter(
-    (want) => wantTypes.get(want) === 'dish' && !menus.some((menu) => menu.fulfills.includes(want)),
-  )
+  const dishWants = request.wants.filter((want) => wantTypes.get(want) === 'dish')
+  const missingDishes = dishWants.filter((want) => !menus.some((menu) => menu.fulfills.includes(want)))
   if (missingDishes.length > 0) {
     return { ok: false, reason: `料理名（${missingDishes.join('、')}）の案がありません。案1からその料理にしてください` }
+  }
+
+  // 「料理名を3通り」のときは、3案すべてが料理名のどれかのアレンジになっていること
+  if (request.dishVariations && dishWants.length > 0) {
+    const others = menus.filter((menu) => !dishWants.some((want) => menu.fulfills.includes(want)))
+    if (others.length > 0) {
+      return {
+        ok: false,
+        reason: `「料理名を3通り」なので、3案すべてを（${dishWants.join('、')}）のアレンジ違いにしてください。「${others[0].title}」が当てはまりません`,
+      }
+    }
   }
 
   return { ok: true, menus }
