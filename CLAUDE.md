@@ -27,7 +27,7 @@ pantry-chef（画面表示名：**パントリーシェフ**）。
 
 ## 技術スタック
 
-STEP 9（API費用対策）まで作成済み。公開・README は、設計書の STEP に沿って追加する予定。
+STEP 10（Vercelで公開）まで作成済み。README は、設計書の STEP に沿って追加する予定。
 
 | 領域 | 採用技術 |
 | --- | --- |
@@ -36,7 +36,7 @@ STEP 9（API費用対策）まで作成済み。公開・README は、設計書�
 | 自分専用の同期 | Upstash Redis（`@upstash/redis`。`api/sync.js` → `server/syncStore.js`。画面側は `src/sync/syncClient.js`）。キー `pantry:data` に在庫・買い物リスト・名前の候補・最後のAI提案・保存したレシピをまとめた1件のJSONで保存する。2台の編集がぶつかったら `updatedAt` が新しいほうを採用。同期するデータの保存は `saveSyncedJson` を通す |
 | サーバー処理 | Vercel関数（`api/` フォルダ。例：`api/suggest.js`、`api/sync.js`） |
 | AI | Claude API（モデルは環境変数 `ANTHROPIC_MODEL` で指定） |
-| 公開 | Vercel（GitHub連携）。GitHub Pagesは使わない |
+| 公開 | Vercel（GitHub連携。main へのプッシュで自動デプロイ）。設定は `vercel.json`（Vite のビルド、`api/suggest.js` の実行時間の上限60秒）。環境変数は Vercel の画面で登録する。GitHub Pagesは使わない |
 | ローカル確認 | `npm run dev` だけで API関数まで動く（`vite.config.js` の開発用ミドルウェア）。環境変数は `.env`（見本は `.env.example`）。`vercel dev` でも動く |
 
 ビルドツールやライブラリを追加するときは、そのSTEPで追記する。

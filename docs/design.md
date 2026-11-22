@@ -234,6 +234,7 @@ JSONだけを返す。献立は3案。手順は4〜6行の短い文にして、�
 - `server/suggestMenus.js`：入力の確認・プロンプト・Claude APIの呼び出し・応答の確認。Vercelにも開発サーバーにも依存しない
 - `api/suggest.js`：Vercel関数の入口。`server/suggestMenus.js` を呼ぶだけ
 - ローカル開発では `npm run dev` だけで動く。`vite.config.js` の開発用ミドルウェアが `/api/suggest` を `api/suggest.js` に渡し、`.env` の環境変数を読む（本番のVercelでは使われない）。Vercel CLI を入れれば `vercel dev` でも動く
+- `vercel.json`：本番の設定。Vite でビルドした `dist` を公開し、`api/` の関数を動かす。AIの応答とやり直しで時間がかかることがあるため、`api/suggest.js` の実行時間の上限を60秒にする
 
 ## 公開と費用対策
 
